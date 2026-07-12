@@ -1,0 +1,16 @@
+# Node / Capacitor
+node_modules/
+
+# Android (gerado pelo build, nao precisa versionar)
+android/build/
+android/app/build/
+android/app/release/
+android/.gradle/
+android/local.properties
+android/captures/
+*.apk
+*.aab
+
+# Sistema
+.DS_Store
+Thumbs.db

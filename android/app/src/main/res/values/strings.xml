@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Manual do Montador</string>
+    <string name="title_activity_main">Manual do Montador</string>
+    <string name="package_name">com.madeirol.manualdomontador</string>
+    <string name="custom_url_scheme">com.madeirol.manualdomontador</string>
+</resources>

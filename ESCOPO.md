@@ -49,13 +49,24 @@ instalar cada peça.
    (por cima da própria tela, não precisa sair dela) com o link para
    "Favoritos" e a versão do app. Não duplica a navegação da barra inferior
    (Início/Adicionar/Conta); serve pra coisas que não têm outro lugar fixo.
-10. **Favoritos** — botão de coração (♡/♥) em qualquer acessório, tanto na
+10. **Favoritos** — botão de estrela (☆/★) em qualquer acessório, tanto na
     lista de um fabricante quanto na tela de detalhe, pra marcar/desmarcar
     como favorito sem precisar estar logado (é só uma preferência de
     consulta, não uma edição). A tela "Favoritos" (acessível pelo menu
     lateral) lista todos os acessórios marcados, de qualquer fabricante,
     com um atalho pra cada um. Remover um acessório também tira ele dos
     favoritos automaticamente.
+11. **App instalável (APK) offline, com aviso de atualização** — o mesmo
+    código do protótipo (`prototipo/`) é empacotado com
+    [Capacitor](https://capacitorjs.com) num app Android real. Roda
+    **100% offline**: os arquivos ficam dentro do APK, não depende de
+    internet nem de nenhum site pra funcionar (mesmo padrão de outros
+    apps internos da empresa). Ao abrir a tela Início, se houver
+    internet, o app confere se existe uma versão mais nova publicada no
+    GitHub Releases do projeto; se sim, mostra uma faixa **dispensável**
+    ("Nova versão disponível" + botão "Atualizar") — o montador pode
+    ignorar e seguir usando a versão instalada. Ver
+    `prototipo/js/atualizacao.js` e `prototipo/js/versao.js`.
 
 ## Catálogo pré-cadastrado (exemplos incluídos no protótipo)
 - **Blum**: Articulador Aventos HK-XS, Corrediça Tandem
@@ -79,7 +90,8 @@ na hora, sem precisar editar pastas).
 ## Fora do escopo (v1)
 - Login com backend / senhas com hash / sincronização em nuvem (o login
   atual é só um controle de acesso de protótipo, ver item 7 acima).
-- Geração de APK ou publicação em loja.
+- Publicação em loja (Play Store) — distribuição é por APK direto (ver
+  item 11 e "Como gerar/publicar uma atualização" abaixo).
 - Orçamento, agenda ou gestão de clientes.
 
 ## Telas
@@ -107,13 +119,31 @@ Fluxo alternativo (fabricante): Início → aba "Adicionar" → se não estiver
 logado, vai para Conta/login → após entrar, troca para a aba "Fabricante" →
 preenche nome/cor/logo → salva → volta para a tela do novo fabricante.
 
-## Próximos passos (depois do protótipo)
+## Como gerar/publicar uma atualização do APK
+1. Mudar o que for preciso em `prototipo/` (o código-fonte de verdade).
+2. Subir o número em `prototipo/js/versao.js` (ex: `"1.0.0"` → `"1.1.0"`).
+3. `npx cap sync android` (copia os arquivos novos pro projeto Android).
+4. Gerar o APK (`assembleDebug` pra testar; `assembleRelease` assinado
+   pra distribuir de verdade) e publicar como uma "Release" nova no
+   GitHub, com uma tag igual à versão (ex: `v1.1.0`) e o APK anexado.
+5. Da próxima vez que um montador abrir o app com internet, ele vê o
+   aviso de atualização sozinho — não precisa reinstalar manualmente
+   nem mandar o APK por fora.
+
+## Próximos passos
+- Criar o repositório no GitHub e trocar o placeholder `REPO` em
+  `prototipo/js/atualizacao.js` pelo repositório real.
+- Gerar e testar um APK de release assinado (o de teste gerado até agora
+  é "debug", que serve pra instalar/testar mas não é o formato normal
+  pra distribuir pros montadores).
+- Publicar a primeira release no GitHub e validar o fluxo de aviso de
+  atualização de ponta a ponta, num celular Android de verdade.
 - Substituir os slots de imagem pelos arquivos reais (logos e fotos de
   produto), conforme `prototipo/assets/README.md`.
 - Revisar/reescrever os textos de instalação dos itens de catálogo.
 - Validar telas com o usuário final (montador).
 - Definir a lista real de pessoas com acesso a editar/adicionar/remover
-  (hoje só tem 1 usuário de exemplo em `prototipo/js/auth.js`).
-- Só então decidir stack definitiva (nativo/Flutter/RN) para gerar o app
-  real — nesse momento o login também precisa virar de verdade (backend +
-  senha com hash), já que o de protótipo não é seguro.
+  (hoje só tem 1 usuário de exemplo em `prototipo/js/auth.js`) — o login
+  atual continua sendo só de protótipo (senha visível no código); se
+  isso virar um problema real de segurança, será preciso um backend de
+  verdade (fora do escopo atual).

@@ -722,3 +722,37 @@ body {
   color: #6b7280;
 }
 .menu-info-versao { font-weight: 600; color: #374151; margin-bottom: 2px; }
+
+.update-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #1f2937;
+  color: #fff;
+  padding: 10px 14px;
+  position: relative;
+  z-index: 50;
+}
+.update-banner-texto { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.update-banner-texto strong { font-size: 13px; }
+.update-banner-texto span { font-size: 11px; color: #cbd5e1; }
+.update-banner-acoes { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.update-banner-atualizar {
+  background: #f5a623;
+  color: #1f2937;
+  border: none;
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.update-banner-fechar {
+  background: none;
+  border: none;
+  color: #cbd5e1;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px;
+}

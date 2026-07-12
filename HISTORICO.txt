@@ -5,16 +5,16 @@ O QUE E O PROJETO
 ===========================================================================
 App de apoio para montadores de moveis: catalogo de acessorios/ferragens
 organizados por fabricante (Blum, Hafele, Hettich), com imagem,
-especificacoes e passo a passo de instalacao. O que existe hoje e um
-PROTOTIPO em HTML/CSS/JS puro (sem backend, sem geracao de APK), pensado
-apenas para validar telas e funcionalidades antes de decidir a stack
-definitiva.
+especificacoes e passo a passo de instalacao. A base e um PROTOTIPO em
+HTML/CSS/JS puro (sem backend), que agora tambem e empacotado com
+Capacitor num app Android instalavel (APK) que roda 100% OFFLINE (os
+arquivos ficam dentro do APK, nao carrega de nenhum site).
 
 Estrutura principal:
 - ESCOPO.md            -> documento de escopo (funcionalidades, telas, fluxo)
 - HISTORICO.txt         -> este arquivo (log de tudo que foi feito)
-- prototipo/            -> protototipo clicavel em HTML
-    index.html          -> lista de fabricantes
+- prototipo/            -> codigo-fonte web (HTML/CSS/JS), fonte de verdade
+    index.html          -> lista de fabricantes (checa atualizacao aqui)
     fabricante.html     -> lista de acessorios de um fabricante (ex-marca.html)
     acessorio.html      -> detalhe do acessorio
     passo.html          -> passo a passo de instalacao (imagem + texto)
@@ -27,9 +27,17 @@ Estrutura principal:
     js/auth.js             -> login de protótipo (usuarios fixos, sem backend)
     js/cropper.js          -> editor de recorte/zoom de foto antes de salvar
     js/menu.js             -> menu lateral (favoritos + versao do app)
+    js/versao.js            -> numero da versao atual do app (VERSAO_APP)
+    js/atualizacao.js       -> verifica versao nova no GitHub Releases e avisa
     assets/logos/          -> logos dos fabricantes
     assets/produtos/       -> fotos dos acessorios e dos passos
     assets/README.md       -> lista exata dos arquivos de imagem esperados
+- android/              -> projeto nativo Android gerado pelo Capacitor
+                           (gerado automaticamente, nao editar na mao;
+                           refletir mudancas rodando "npx cap sync android")
+- capacitor.config.json -> config do Capacitor (appId, nome, pasta web)
+- package.json           -> dependencias do Capacitor (npm)
+- .gitignore             -> ignora node_modules/, build do Android, *.apk
 
 ===========================================================================
 HISTORICO DE ALTERACOES
@@ -416,9 +424,71 @@ HISTORICO DE ALTERACOES
   um cross-fade completo). Cards (.card) tambem ganharam uma transicao
   suave na cor de fundo ao tocar, em vez de mudar instantaneo.
 
+[2026-07-12] Virou app Android instalavel (APK) - offline, com aviso de atualizacao
+- Usuario pediu pra transformar o prototipo num APK de verdade. Primeira
+  ideia foi o app carregar de um site hospedado (atualiza sozinho), mas o
+  usuario corrigiu: tem que ser 100% OFFLINE, seguindo o padrao de outros
+  aplicativos internos da empresa - o app roda sem internet, e so avisa
+  "tem versao nova, quer atualizar?" quando abre (se tiver internet nesse
+  momento). Escolhido aviso DISPENSAVEL (nao obrigatorio) - o montador
+  pode adiar e continuar na versao atual.
+- Verificado que a maquina ja tinha Android Studio + Android SDK + um
+  Java (JBR, o Java que vem junto do Android Studio) instalados - nao
+  precisou instalar nada, so configurar as variaveis de ambiente
+  ANDROID_HOME e JAVA_HOME (permanentes, nivel usuario do Windows).
+- Empacotamento escolhido: Capacitor (github.com/ionic-team/capacitor).
+  Motivo: reaproveita o prototipo/ quase sem mudanca nenhuma (HTML/CSS/JS
+  continuam os mesmos), diferente de reescrever em Flutter/React Native
+  do zero.
+- Criado projeto Capacitor na raiz: package.json, capacitor.config.json
+  (appId "com.madeirol.manualdomontador", webDir "prototipo" - SEM
+  server.url, ou seja, offline/empacotado por padrao) e a pasta android/
+  (projeto nativo Android gerado, nao editado na mao).
+- Build de teste rodado com sucesso: gerou
+  android/app/build/outputs/apk/debug/app-debug.apk (~4.1 MB), confirma
+  que a esteira toda funciona (Capacitor + Gradle + SDK + Java).
+- Criado o mecanismo de aviso de atualizacao (padrao pedido pelo
+  usuario, tipo os outros apps internos da empresa):
+    - prototipo/js/versao.js: numero da versao atual (VERSAO_APP),
+      guardado dentro do proprio app.
+    - prototipo/js/atualizacao.js: quando a tela Inicio abre, tenta
+      consultar https://api.github.com/repos/<usuario>/<repo>/releases/latest
+      (API publica do GitHub, sem precisar login). Se a versao de la for
+      maior que a VERSAO_APP local, mostra uma faixa no topo "Nova versao
+      disponivel" com botao "Atualizar" (abre o instalador do APK dessa
+      release no navegador do celular) e um "X" pra dispensar (guarda no
+      localStorage pra nao insistir na mesma versao de novo). Se nao
+      tiver internet ou der erro, falha em silencio - app continua
+      offline normal. REPO ainda esta com um placeholder
+      ("SEU-USUARIO/manual-do-montador") ate o repositorio real ser
+      criado no GitHub.
+    - prototipo/js/menu.js ajustado pra usar o VERSAO_APP compartilhado
+      de versao.js em vez de ter o proprio numero duplicado.
+    - Novo CSS .update-banner (faixa escura no topo com o aviso).
+- Criado repositorio git na raiz do projeto (nao existia antes) com um
+  commit inicial de tudo que ja existia, e um .gitignore (ignora
+  node_modules/, build do Android, arquivos .apk/.aab).
+- Fluxo pensado pra "ir atualizando": quando quiser publicar uma versao
+  nova, (1) sobe o numero em prototipo/js/versao.js, (2) roda
+  "npx cap sync android" e gera o APK novo (assembleRelease, assinado),
+  (3) publica esse APK numa "Release" nova no GitHub (com tag da mesma
+  versao, ex: v1.1.0) - o app dos montadores detecta sozinho na proxima
+  vez que abrir com internet.
+
 ===========================================================================
 PENDENCIAS / PROXIMOS PASSOS
 ===========================================================================
+- Criar o repositorio no GitHub (usuario ja tem conta) e trocar o
+  placeholder REPO em prototipo/js/atualizacao.js pelo "usuario/repo"
+  real.
+- Gerar e testar um APK de RELEASE assinado (o de teste gerado agora e
+  "debug", que serve pra instalar e testar mas normalmente nao e o que
+  se distribui pros montadores - falta configurar assinatura pra build
+  de release).
+- Publicar a primeira release no GitHub (com o APK anexado) pra validar
+  o fluxo de aviso de atualizacao de ponta a ponta.
+- Testar a instalacao em um celular Android de verdade (ainda so foi
+  testado que o build compila, nao que o app abre/funciona no aparelho).
 - Adicionar fotos de capa restantes: Corredica Tandem, Trilho telescopico,
   Sistema Quadro.
 - Adicionar fotos de cada passo de instalacao (hoje todas usam o

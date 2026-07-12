@@ -2,8 +2,6 @@
 // app (versão). Injetado dentro de ".phone" em toda página que incluir
 // este script e tiver um botão com id="btn-menu".
 (function () {
-  const VERSAO_APP = "1.0.0";
-
   function montarMenu() {
     if (document.getElementById("menu-lateral")) return;
     const phone = document.querySelector(".phone");
