@@ -4,8 +4,7 @@
 // de abrir o app; se falhar (sem rede, GitHub fora do ar), não mostra
 // nada e segue normal. Só verifica na tela Início (abertura do app).
 (function () {
-  // Depois de criar o repositório no GitHub, troque pelo "usuario/repo" certo.
-  const REPO = "SEU-USUARIO/manual-do-montador";
+  const REPO = "Gabrieldsss/ACESSORIOS_MANUAL_APP";
 
   function compararVersoes(a, b) {
     const pa = a.replace(/^v/i, "").split(".").map(Number);
@@ -55,7 +54,6 @@
   }
 
   async function verificarAtualizacao() {
-    if (REPO.startsWith("SEU-USUARIO")) return;
     try {
       const resp = await fetch(`https://api.github.com/repos/${REPO}/releases/latest`);
       if (!resp.ok) return;
