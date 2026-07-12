@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Passo a Passo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="phone">
+  <div class="topbar">
+    <a id="link-voltar" href="index.html" class="back">←</a>
+    <h1 id="titulo-topo">Passo a passo</h1>
+    <button type="button" class="menu-btn" id="btn-menu" aria-label="Abrir menu">☰</button>
+  </div>
+  <div class="content" id="conteudo"></div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script src="js/menu.js"></script>
+<script>
+const id = getQueryParam("id");
+const acessorio = getAcessorioPorId(id);
+const fabricante = acessorio ? getFabricantePorId(acessorio.fabricanteId) : null;
+let step = parseInt(getQueryParam("step") || "0", 10);
+const conteudo = document.getElementById("conteudo");
+
+document.getElementById("link-voltar").href = `acessorio.html?id=${id}`;
+
+function render() {
+  if (!acessorio) {
+    conteudo.innerHTML = emptyState("❓", "Acessório não encontrado.");
+    return;
+  }
+  const total = acessorio.passos.length;
+  if (step < 0) step = 0;
+  if (step > total - 1) step = total - 1;
+  const passo = acessorio.passos[step];
+
+  document.getElementById("titulo-topo").textContent = acessorio.nome;
+
+  if (fabricante) conteudo.style.setProperty("--cor", fabricante.cor);
+  conteudo.innerHTML = `
+    <div class="progress">Passo ${step + 1} de ${total}</div>
+    <div class="progress-bar"><div style="width:${((step + 1) / total) * 100}%"></div></div>
+    <div class="step-image">${stepImageHtml(passo)}</div>
+    <div class="step-text">${passo.texto}</div>
+    <div class="nav-buttons">
+      <button class="prev" ${step === 0 ? "disabled" : ""} onclick="ir(${step - 1})">← Anterior</button>
+      ${step === total - 1
+        ? `<button class="next" onclick="window.location.href='acessorio.html?id=${id}'">Concluir ✓</button>`
+        : `<button class="next" onclick="ir(${step + 1})">Próximo →</button>`}
+    </div>
+  `;
+}
+
+function ir(novoStep) {
+  step = novoStep;
+  history.replaceState(null, "", `passo.html?id=${id}&step=${step}`);
+  render();
+}
+
+document.addEventListener("keydown", (e) => {
+  if (!acessorio) return;
+  if (e.key === "ArrowLeft") {
+    if (step > 0) ir(step - 1);
+  } else if (e.key === "ArrowRight") {
+    if (step < acessorio.passos.length - 1) {
+      ir(step + 1);
+    } else {
+      window.location.href = `acessorio.html?id=${id}`;
+    }
+  }
+});
+
+render();
+</script>
+</body>
+</html>

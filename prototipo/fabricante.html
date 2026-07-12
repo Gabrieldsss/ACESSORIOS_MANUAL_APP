@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Acessórios do Fabricante</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="phone">
+  <div class="topbar">
+    <a href="index.html" class="back">←</a>
+    <h1 id="titulo-topo">Fabricante</h1>
+    <button type="button" class="menu-btn" id="btn-menu" aria-label="Abrir menu">☰</button>
+  </div>
+  <div class="content">
+    <input class="search" id="busca" type="text" placeholder="Buscar acessório por nome ou categoria...">
+
+    <div class="section-title">Catálogo</div>
+    <div class="card-list" id="lista-catalogo"></div>
+
+    <div class="section-title">Meus Acessórios</div>
+    <div class="card-list" id="lista-meus"></div>
+    <div class="empty" id="vazio-meus" style="display:none;"><div class="empty-icon">📋</div><div>Nenhum acessório deste fabricante cadastrado por você ainda.</div></div>
+
+    <div id="area-gerenciar-fabricante"></div>
+  </div>
+
+  <a href="#" class="fab" id="fab-adicionar">+</a>
+
+  <div class="tabbar">
+    <a href="index.html"><span class="icon">🏠</span>Início</a>
+    <a href="adicionar.html"><span class="icon">➕</span>Adicionar</a>
+    <a href="login.html"><span class="icon">👤</span>Conta</a>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/menu.js"></script>
+<script>
+const fabricanteId = getQueryParam("id");
+const fabricante = getFabricantePorId(fabricanteId);
+
+if (!fabricante) {
+  document.querySelector(".content").innerHTML = emptyState("🏷️", "Fabricante não encontrado.");
+} else {
+  document.getElementById("titulo-topo").textContent = fabricante.nome;
+  document.getElementById("fab-adicionar").href = `adicionar.html?fabricante=${fabricante.id}`;
+
+  function card(acessorio) {
+    return `<a class="card" href="acessorio.html?id=${acessorio.id}">
+      <div class="thumb">${thumbHtml(acessorio)}</div>
+      <div class="info">
+        <strong>${acessorio.nome}</strong>
+        <span>${categoriaIcone(acessorio.categoria)} ${acessorio.categoria} · ${acessorio.passos.length} passos</span>
+      </div>
+      ${favoritoBtn(acessorio.id)}
+    </a>`;
+  }
+
+  function render(filtro) {
+    const f = (filtro || "").toLowerCase();
+    const { catalogo, meus } = getAcessoriosPorFabricante(fabricante.id);
+    const catalogoFiltrado = catalogo.filter(a => a.nome.toLowerCase().includes(f) || a.categoria.toLowerCase().includes(f));
+    const meusFiltrados = meus.filter(a => a.nome.toLowerCase().includes(f) || a.categoria.toLowerCase().includes(f));
+
+    document.getElementById("lista-catalogo").innerHTML = catalogoFiltrado.map(card).join("") || emptyState("🔍", "Nenhum item encontrado.");
+
+    const listaMeus = document.getElementById("lista-meus");
+    const vazio = document.getElementById("vazio-meus");
+    if (meusFiltrados.length === 0) {
+      listaMeus.innerHTML = "";
+      vazio.style.display = meus.length === 0 ? "block" : "none";
+    } else {
+      vazio.style.display = "none";
+      listaMeus.innerHTML = meusFiltrados.map(card).join("");
+    }
+  }
+
+  document.getElementById("busca").addEventListener("input", (e) => render(e.target.value));
+  render("");
+
+  if (estaLogado()) {
+    document.getElementById("area-gerenciar-fabricante").innerHTML = `
+      <div style="height:16px"></div>
+      <a class="btn-secondary" href="adicionar.html?editarFabricante=${fabricante.id}">Editar fabricante</a>
+      <div style="height:10px"></div>
+      <button class="btn-danger" id="btn-remover-fabricante">Remover fabricante</button>
+    `;
+    document.getElementById("btn-remover-fabricante").addEventListener("click", () => {
+      if (confirm(`Remover o fabricante "${fabricante.nome}"? Os acessórios cadastrados nele também serão removidos. Essa ação não pode ser desfeita.`)) {
+        removerFabricante(fabricante.id);
+        window.location.href = "index.html";
+      }
+    });
+  }
+}
+</script>
+</body>
+</html>

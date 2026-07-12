@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Favoritos</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="phone">
+  <div class="topbar">
+    <a href="index.html" class="back">←</a>
+    <h1>Favoritos</h1>
+    <button type="button" class="menu-btn" id="btn-menu" aria-label="Abrir menu">☰</button>
+  </div>
+  <div class="content">
+    <div class="card-list" id="lista-favoritos"></div>
+    <div class="empty" id="vazio-favoritos" style="display:none;"><div class="empty-icon">☆</div><div>Você ainda não marcou nenhum manual como favorito. Toque no ☆ na lista de acessórios ou na tela do acessório pra marcar.</div></div>
+  </div>
+
+  <div class="tabbar">
+    <a href="index.html"><span class="icon">🏠</span>Início</a>
+    <a href="adicionar.html"><span class="icon">➕</span>Adicionar</a>
+    <a href="login.html"><span class="icon">👤</span>Conta</a>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/menu.js"></script>
+<script>
+function card(acessorio) {
+  const fabricante = getFabricantePorId(acessorio.fabricanteId);
+  const origemUsuario = acessorio.origem === "usuario";
+  const badge = `<span class="origem-badge ${origemUsuario ? "usuario" : "catalogo"}">${origemUsuario ? "Meu" : "Catálogo"}</span>`;
+  return `<a class="card" href="acessorio.html?id=${acessorio.id}">
+    <div class="thumb">${thumbHtml(acessorio)}</div>
+    <div class="info">
+      <strong>${acessorio.nome}${badge}</strong>
+      <span>${categoriaIcone(acessorio.categoria)} ${fabricante ? fabricante.nome + " · " : ""}${acessorio.categoria}</span>
+    </div>
+    ${favoritoBtn(acessorio.id)}
+  </a>`;
+}
+
+function render() {
+  const itens = getFavoritos().map(getAcessorioPorId).filter(Boolean);
+  document.getElementById("lista-favoritos").innerHTML = itens.map(card).join("");
+  document.getElementById("vazio-favoritos").style.display = itens.length === 0 ? "block" : "none";
+}
+
+document.addEventListener("favoritos:mudou", render);
+render();
+</script>
+</body>
+</html>

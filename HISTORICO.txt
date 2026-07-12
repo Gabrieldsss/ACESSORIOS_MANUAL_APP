@@ -1,0 +1,431 @@
+PROJETO: Manual do Montador — Ferragens e Acessorios (Blum, Hafele, Hettich)
+
+===========================================================================
+O QUE E O PROJETO
+===========================================================================
+App de apoio para montadores de moveis: catalogo de acessorios/ferragens
+organizados por fabricante (Blum, Hafele, Hettich), com imagem,
+especificacoes e passo a passo de instalacao. O que existe hoje e um
+PROTOTIPO em HTML/CSS/JS puro (sem backend, sem geracao de APK), pensado
+apenas para validar telas e funcionalidades antes de decidir a stack
+definitiva.
+
+Estrutura principal:
+- ESCOPO.md            -> documento de escopo (funcionalidades, telas, fluxo)
+- HISTORICO.txt         -> este arquivo (log de tudo que foi feito)
+- prototipo/            -> protototipo clicavel em HTML
+    index.html          -> lista de fabricantes
+    fabricante.html     -> lista de acessorios de um fabricante (ex-marca.html)
+    acessorio.html      -> detalhe do acessorio
+    passo.html          -> passo a passo de instalacao (imagem + texto)
+    adicionar.html      -> cadastro/edicao de fabricante e acessorio proprio (upload de fotos, exige login)
+    login.html          -> tela de login / conta (usuario logado, sair)
+    favoritos.html      -> lista de acessorios marcados como favoritos
+    css/style.css        -> estilo visual (tela em formato de celular)
+    js/data.js            -> fabricantes, catalogo de acessorios, favoritos, localStorage
+    js/app.js             -> funcoes auxiliares (imagens, logos, query params, botao de favorito)
+    js/auth.js             -> login de protótipo (usuarios fixos, sem backend)
+    js/cropper.js          -> editor de recorte/zoom de foto antes de salvar
+    js/menu.js             -> menu lateral (favoritos + versao do app)
+    assets/logos/          -> logos dos fabricantes
+    assets/produtos/       -> fotos dos acessorios e dos passos
+    assets/README.md       -> lista exata dos arquivos de imagem esperados
+
+===========================================================================
+HISTORICO DE ALTERACOES
+===========================================================================
+
+[2026-07-11] Escopo inicial definido
+- Ideia inicial: app "Manual do Montador" para montadores de moveis
+  consultarem instrucoes de montagem (imagem + texto).
+- Criado ESCOPO.md.
+- Criado protototipo em HTML com telas: lista de moveis, detalhe do movel,
+  passo a passo (imagem+texto, navegacao anterior/proximo) e cadastro de
+  movel proprio (upload real de fotos, salvo em localStorage do navegador).
+
+[2026-07-11] Mudanca de escopo: de "moveis" para "acessorios por marca"
+- A pedido do usuario, o app deixou de ser sobre moveis inteiros e passou a
+  organizar ACESSORIOS/FERRAGENS por MARCA: Blum, Hafele, Hettich.
+- Reestruturacao do prototipo:
+  - Nova tela inicial (index.html) lista as 3 marcas.
+  - Nova tela marca.html lista os acessorios de cada marca (catalogo + os
+    que o usuario cadastrar), com busca.
+  - movel.html substituido por acessorio.html (detalhe do acessorio).
+  - passo.html adaptado para trabalhar com acessorios em vez de moveis.
+  - adicionar.html ganhou selecao de marca (dropdown).
+- Catalogo populado com 6 acessorios de exemplo (2 por marca), incluindo os
+  citados pelo usuario:
+    Blum    -> Articulador Aventos HK-XS, Corredica Tandem
+    Hafele  -> Pe para rodape 80, Trilho telescopico
+    Hettich -> Dobradica Sensys, Sistema Quadro
+  Os textos de instalacao desses itens sao GENERICOS/placeholder (a revisar
+  depois com o conteudo real).
+- Criado sistema de "slot de imagem com fallback": como nao e possivel usar
+  os arquivos oficiais de logo/foto das marcas sem os direitos de uso, cada
+  imagem (logo ou foto de produto) tem um caminho de arquivo esperado (ex:
+  assets/logos/blum.png). Enquanto o arquivo nao existe, aparece um
+  placeholder mostrando esse caminho; assim que o arquivo certo e colocado
+  na pasta, a imagem aparece sozinha, sem precisar editar codigo.
+- Criado assets/README.md com a lista exata dos arquivos de imagem
+  esperados (nomes e pastas).
+
+[2026-07-11] Imagens reais das 3 marcas adicionadas
+- Usuario enviou as imagens reais (logos + fotos de produto), salvas em
+  C:\Users\NOTEBOOKGABRIEL\OneDrive\Pictures\app ajuda.
+- Identificadas visualmente e copiadas para o projeto:
+    assets/logos/blum.png
+    assets/logos/hafele.png
+    assets/logos/hettich.png
+    assets/produtos/blum-aventos-hk-xs.jpg   (foto do Aventos HK-XS)
+    assets/produtos/hafele-pe-rodape-80.jpg  (foto do Pe para rodape 80)
+    assets/produtos/hettich-sensys.jpg       (foto da dobradica Sensys)
+- js/data.js ajustado para apontar para ".jpg" nesses 3 itens (os demais
+  acessorios do catalogo continuam esperando ".png" ate receber fotos).
+- assets/README.md atualizado indicando o que ja foi preenchido.
+
+[2026-07-11] Criado este arquivo (HISTORICO.txt)
+- A partir de agora, toda alteracao feita no projeto sera registrada aqui,
+  com data, o que mudou e por que.
+
+[2026-07-12] Login de acesso restrito (protótipo, sem backend)
+- A pedido do usuario, criada uma aba/tela de login ("Conta") para que so
+  algumas pessoas consigam adicionar acessorio/marca/manual; quem so quer
+  consultar continua sem precisar entrar.
+- Como o projeto ainda e um prototipo em HTML/CSS/JS puro (sem servidor),
+  o login criado e "de mentira": usuario/senha fixos no codigo
+  (prototipo/js/auth.js, lista USUARIOS), sessao guardada no localStorage
+  do navegador. Nao e seguro de verdade (qualquer um que abrir o codigo
+  fonte ve a senha) - serve so para validar o fluxo nesta fase. Login com
+  backend/hash de senha fica para quando o app sair do prototipo (ja
+  registrado em ESCOPO.md > Proximos passos).
+- Criada prototipo/login.html: formulario de entrar (usuario/senha) ou,
+  se ja logado, mostra o nome do usuario e botao "Sair".
+- prototipo/adicionar.html agora exige login: quem nao esta logado e
+  redirecionado para login.html e volta pro formulario depois de entrar
+  (via parametro next).
+- Adicionada 3a aba "Conta" (👤) na tabbar de index.html e marca.html.
+- ESCOPO.md atualizado: nova funcionalidade 6 (login restrito), nova linha
+  na tabela de Telas, fluxo alternativo atualizado, "Fora do escopo" e
+  "Proximos passos" ajustados (login com backend fica para depois; anotado
+  tambem que "editar acessorio existente" ainda nao e uma funcionalidade,
+  so "adicionar novo").
+- Usuario de exemplo criado em js/auth.js: usuario "montador", senha
+  "1234". Trocar/adicionar pessoas reais editando essa lista.
+
+[2026-07-12] Ajustes no login + cadastro de marca propria
+- A pedido do usuario, tela de login (prototipo/login.html) centralizada
+  verticalmente na tela (classe .content-center), em vez de ficar alinhada
+  no topo como as demais paginas.
+- Texto da tela de login simplificado: era "Entre com sua conta de
+  montador autorizado..."; agora e "Entre com sua conta para adicionar
+  marcas, acessorios e manuais de instalacao...".
+- Nova funcionalidade: cadastro de MARCA propria, nao so de acessorio.
+  A tela "Adicionar" (prototipo/adicionar.html) ganhou um seletor no topo
+  com duas abas, "Acessorio" e "Marca":
+    - Aba Acessorio: formulario que ja existia (marca, nome, categoria,
+      foto, passos).
+    - Aba Marca (nova): nome da marca, cor de destaque (color picker) e
+      logo (upload opcional, com fallback pro nome da marca se nao
+      enviar). Ao salvar, a marca aparece na tela Inicio e no seletor de
+      marca do cadastro de acessorio.
+  Continua exigindo login, igual o cadastro de acessorio.
+- prototipo/js/data.js: marcas fixas (Blum, Hafele, Hettich) agora se
+  combinam com as marcas cadastradas pelo usuario (salvas em
+  localStorage, chave "minhasMarcas"). Novas funcoes: getMinhasMarcas(),
+  salvarMinhaMarca(), getTodasMarcas(). getMarcaPorId() passou a buscar
+  nas duas listas.
+- prototipo/js/app.js: logoImg() ajustada para aceitar logo enviada por
+  upload (logoBase64) ou nenhuma logo (mostra so o nome da marca), alem
+  do slot de imagem de arquivo que ja existia para as 3 marcas fixas.
+- ESCOPO.md atualizado: marcas deixaram de ser "fixas" no texto de
+  "Fora do escopo"; nova funcionalidade 6 (cadastro de marca propria);
+  tabela de Telas e fluxos alternativos atualizados.
+
+[2026-07-12] Remover marca/acessorio cadastrado pelo usuario
+- Depois de sugerir uma lista de melhorias simples, o usuario pediu a
+  opcao "remover o que foi cadastrado" (ate entao so dava pra adicionar,
+  nao existia jeito de excluir pela interface).
+- prototipo/js/data.js: novas funcoes removerMeuAcessorio(id) e
+  removerMinhaMarca(id). Remover uma marca tambem remove (em cascata) os
+  acessorios que o usuario cadastrou nela.
+- prototipo/acessorio.html: passou a incluir js/auth.js. Acessorios com
+  origem "usuario" (cadastrados pelo proprio usuario) ganham um botao
+  "Remover acessorio" (vermelho, .btn-danger) no fim da tela, visivel so
+  para quem esta logado. Pede confirmacao antes de excluir; acessorios do
+  catalogo fixo nao tem esse botao.
+- prototipo/marca.html: marcas com origem "usuario" ganham um botao
+  "Remover marca" no fim da lista, visivel so para quem esta logado. Pede
+  confirmacao (avisando que os acessorios da marca tambem serao
+  removidos); as 3 marcas fixas (Blum, Hafele, Hettich) nao tem esse
+  botao.
+- prototipo/adicionar.html: marca criada pelo usuario passou a salvar
+  origem: "usuario" (faltava esse campo, usado agora pra saber quais
+  marcas podem ser removidas).
+- prototipo/css/style.css: nova classe .btn-danger (botao com borda e
+  texto vermelho) para as duas telas acima.
+- ESCOPO.md atualizado: nova funcionalidade 8 (remover marca/acessorio
+  proprio); "Fora do escopo" ajustado pra deixar claro que so falta
+  "editar", nao "remover".
+
+[2026-07-12] Editar e remover PASSOU A VALER PRA TUDO (nao so o que o usuario cadastrou)
+- O usuario pediu pra estender o botao de remover pra TODOS os itens
+  (inclusive o catalogo fixo e as 3 marcas fixas, nao so o que o proprio
+  usuario cadastrou) e tambem pediu uma opcao de EDITAR o que ja esta
+  cadastrado. Reforcou que os dois continuam exigindo permissao (login).
+- prototipo/js/data.js reestruturado pra suportar isso:
+    - Itens de origem "usuario" (minhasMarcas / meusAcessorios) continuam
+      guardados direto no localStorage; editar/remover mexe na propria
+      lista.
+    - Itens do catalogo fixo (MARCAS / CATALOGO, que sao codigo, nao dá
+      pra apagar/editar um const) passaram a suportar edicao/remocao via
+      "sobreposicao" guardada em chaves novas do localStorage:
+      marcasEditadas, marcasRemovidas, acessoriosEditados,
+      acessoriosRemovidos. getTodasMarcas()/getTodosAcessorios() aplicam
+      essas sobreposicoes por cima do valor original toda vez que montam
+      a lista.
+    - Funcoes renomeadas/novas: editarMarca(id,dados), removerMarca(id),
+      editarAcessorio(id,dados), removerAcessorio(id) — substituem as
+      antigas removerMinhaMarca/removerMeuAcessorio, agora funcionam pra
+      qualquer item. removerMarca() continua removendo em cascata os
+      acessorios da marca (fixos ou proprios).
+- prototipo/acessorio.html: botao "Remover acessorio" agora aparece pra
+  qualquer acessorio (nao so origem "usuario"), condicao passou a ser so
+  estar logado. Novo botao "Editar acessorio" ao lado, leva pra
+  adicionar.html?editarAcessorio=<id>.
+- prototipo/marca.html: mesma logica pro botao "Remover marca" (agora
+  vale pras 3 marcas fixas tambem) e novo botao "Editar marca", leva pra
+  adicionar.html?editarMarca=<id>.
+- prototipo/adicionar.html reescrito pra funcionar tambem como tela de
+  EDICAO, nao só cadastro novo:
+    - Se a URL tem ?editarAcessorio=<id> ou ?editarMarca=<id>, o
+      formulario correspondente vem pre-preenchido (nome, categoria, cor,
+      passos, fotos ja cadastradas) e o seletor de aba Acessorio/Marca
+      fica escondido (edicao é só do tipo que a pessoa clicou).
+    - Foto/logo ja existentes (seja upload proprio ou arquivo do
+      catalogo) aparecem como preview; so muda se a pessoa escolher um
+      arquivo novo.
+    - Ao salvar em modo edicao, chama editarAcessorio()/editarMarca() em
+      vez de criar um item novo, e volta pra tela de detalhe (nao pra
+      lista).
+- ESCOPO.md atualizado: funcionalidade 8 reescrita (editar + remover
+  valem pra qualquer item, condicionado a login); linha da tela
+  "Adicionar" na tabela de Telas passou a mencionar tambem "Editar";
+  removida a pendencia de "avaliar se vale ter edicao" (ja foi feita).
+
+[2026-07-12] Melhoria visual na tela de Conta/Login
+- A pedido do usuario, redesenhada a tela de login (prototipo/login.html),
+  sem mudar o funcionamento (mesmo login de prototipo, mesmas regras).
+- Tela de login (deslogado): ganhou um icone de destaque (cadeado, com
+  fundo em degrade na cor da marca) e titulo acima do formulario; o
+  formulario passou a ficar dentro de um card com sombra (.login-card);
+  campos de usuario/senha ganharam icone dentro do input; campo de senha
+  ganhou botao de mostrar/ocultar (👁️/🙈); foco automatico no campo
+  usuario ao abrir a tela; Enter em qualquer um dos dois campos confirma o
+  login (antes so funcionava no campo senha).
+- Tela de conta (logado): avatar do usuario maior, com fundo em degrade e
+  sombra; novo selo "✓ Acesso liberado para editar" abaixo do nome.
+- prototipo/css/style.css: novas classes .login-hero, .login-hero-icon,
+  .login-card, .input-wrap, .input-icon, .toggle-senha, .account-badge;
+  campos de formulario (texto, senha, select, textarea) ganharam anel de
+  foco (outline colorido ao clicar); corrigido detalhe que o campo de
+  senha nao tinha estilo nenhum aplicado antes (a regra so cobria
+  input[type=text], nao input[type=password]).
+
+[2026-07-12] Renomeado "marca" para "fabricante" em tudo
+- A pedido do usuario, trocado o termo "marca" por "fabricante" em todo o
+  protototipo: texto de tela, nomes de variavel/funcao no codigo, chaves
+  do localStorage, classes CSS e ate o nome de um arquivo. Nenhuma mudanca
+  de comportamento, so de nome/termo.
+- Arquivo renomeado: prototipo/marca.html -> prototipo/fabricante.html.
+  Todos os links pra ele (index.html, acessorio.html, adicionar.html)
+  atualizados.
+- prototipo/js/data.js: MARCAS -> FABRICANTES; campo marcaId dos itens do
+  CATALOGO -> fabricanteId; funcoes getMinhasMarcas/salvarMinhaMarca/
+  getMarcasRemovidas/getEdicoesMarcas/getTodasMarcas/getMarcaPorId/
+  editarMarca/removerMarca -> getMeusFabricantes/salvarMeuFabricante/
+  getFabricantesRemovidos/getEdicoesFabricantes/getTodosFabricantes/
+  getFabricantePorId/editarFabricante/removerFabricante;
+  getAcessoriosPorMarca -> getAcessoriosPorFabricante. Chaves do
+  localStorage renomeadas: minhasMarcas -> meusFabricantes,
+  marcasRemovidas -> fabricantesRemovidos, marcasEditadas ->
+  fabricantesEditados (fabricante/marca cadastrado antes dessa mudanca
+  fica "orfao" no localStorage antigo, mas como e so dado de teste local
+  do prototipo isso nao e problema).
+- prototipo/js/app.js: parametro da funcao logoImg renomeado de marca
+  para fabricante.
+- prototipo/index.html: secao "Marcas" -> "Fabricantes"; renderMarcas() ->
+  renderFabricantes(); classe .marca-list -> .fabricante-list.
+- prototipo/fabricante.html (ex-marca.html): "Marca"/"marca" ->
+  "Fabricante"/"fabricante" em titulo, mensagens, ids e variaveis
+  (fabricanteId, area-gerenciar-fabricante, botoes "Editar fabricante" e
+  "Remover fabricante").
+- prototipo/acessorio.html: variavel marca -> fabricante; link e redirect
+  agora apontam pra fabricante.html.
+- prototipo/adicionar.html: aba "Marca" -> "Fabricante"; campo select
+  input-marca -> input-fabricante; formulario form-marca ->
+  form-fabricante; funcao salvarMarcaNova/salvarMarca ->
+  salvarFabricante(); iniciarEdicaoMarca -> iniciarEdicaoFabricante;
+  parametro de URL ?editarMarca= -> ?editarFabricante=, ?marca= ->
+  ?fabricante=.
+- prototipo/css/style.css: classes .marca-list/.marca-card ->
+  .fabricante-list/.fabricante-card.
+- prototipo/assets/README.md: "Logos das marcas" -> "Logos dos
+  fabricantes".
+- ESCOPO.md: todo o documento revisado pra usar "fabricante" em vez de
+  "marca" (funcionalidades, telas, fluxos). Os nomes reais (Blum, Hafele,
+  Hettich) continuam os mesmos, so o termo generico mudou.
+- Esta entrada do HISTORICO.txt e o cabecalho "O QUE E O PROJETO" foram
+  atualizados pra refletir os nomes novos; as entradas anteriores deste
+  arquivo NAO foram reescritas (continuam mencionando "marca", que era o
+  termo certo na epoca de cada mudanca).
+
+[2026-07-12] Editor de recorte/zoom pra foto de produto, passo e logo
+- O usuario reclamou que a foto do produto, a foto de cada passo do manual
+  e a logo do fabricante nao "cabiam direito" no quadrinho — o app so
+  cortava a foto pra preencher o espaco (object-fit: cover), sem dar
+  controle nenhum sobre qual parte da foto ficava cortada.
+- Perguntado o nivel de solucao desejado (so parar de cortar / escolher
+  ponto de foco / editor de recortar e zoom completo), o usuario escolheu
+  a opcao completa, tipo o recorte de foto de perfil de rede social.
+- Criado prototipo/js/cropper.js: funcao abrirRecorte(arquivo, proporcao,
+  formatoSaida, callback) que abre uma janela por cima da tela com a foto
+  escolhida, deixa arrastar (mouse ou toque) pra posicionar e usar um
+  controle deslizante pra dar zoom, dentro de um quadro na proporcao
+  certa (4/3 pra foto de produto, 1/1 pra foto de passo e pra logo). Ao
+  confirmar ("Usar foto"), desenha o recorte escolhido num <canvas> e gera uma nova
+  imagem (JPEG pra fotos, PNG pra logo, pra preservar fundo transparente)
+  que so entao e salva. Sem nenhuma biblioteca externa.
+- prototipo/adicionar.html: os 3 pontos de upload (foto do produto, foto
+  de cada passo, logo do fabricante) passaram a abrir esse editor antes
+  de guardar a imagem, em vez de usar a foto original direto. O resultado
+  final ja sai na proporcao exata do quadro onde vai aparecer, entao o
+  "corte" que acontecia devido ao object-fit:cover deixa de surpreender —
+  a pessoa escolhe o enquadramento antes de salvar.
+- prototipo/css/style.css: novas classes pro editor (.crop-overlay,
+  .crop-card, .crop-viewport, .crop-img, .crop-zoom, .crop-actions).
+- Nao mudou nada em fotos que ja estavam cadastradas antes; o editor so
+  entra quando a pessoa escolhe um arquivo novo (adicionar ou trocar).
+
+[2026-07-12] Menu lateral (versao do app) + Favoritos
+- A pedido do usuario: uma aba lateral mostrando informacoes como a
+  versao do app, e uma aba de favoritos pra selecionar os manuais
+  favoritos.
+- Criado prototipo/js/menu.js: injeta um menu deslizante (abre por cima
+  da propria tela, de dentro de ".phone", nao sai da pagina) em toda
+  pagina que tiver um botao com id="btn-menu". O menu mostra o nome do
+  app, um link "❤️ Favoritos" e a versao atual ("Versão 1.0.0").
+  Fecha clicando fora (no fundo escurecido) ou apertando Esc.
+- Botao ☰ ("Abrir menu") adicionado no topo de TODAS as telas (Inicio,
+  Fabricante, Acessorio, Passo a passo, Adicionar, Conta, Favoritos).
+- Criado sistema de favoritos:
+    - prototipo/js/data.js: getFavoritos(), isFavorito(id),
+      alternarFavorito(id) — lista de ids guardada no localStorage
+      (chave "favoritos"). Funciona pra acessorio de catalogo ou
+      proprio. removerAcessorio() passou a tambem tirar o item dos
+      favoritos quando ele e removido.
+    - prototipo/js/app.js: favoritoBtn(id) gera o botao de coracao
+      (♡ vazio / ♥ vermelho preenchido); um listener global de clique
+      cuida de alternar o favorito e atualizar visualmente qualquer
+      botao do mesmo id na tela (sem precisar recarregar a lista), e
+      dispara um evento "favoritos:mudou" pra quem precisar re-renderizar
+      (ex: a propria tela de Favoritos, quando um item e desmarcado de
+      dentro dela e precisa sumir da lista).
+    - Botao de favoritar adicionado nos cards da lista de acessorios do
+      fabricante (prototipo/fabricante.html) e como botao flutuante
+      sobre a foto na tela de detalhe do acessorio
+      (prototipo/acessorio.html). NAO exige login — favoritar e so uma
+      preferencia de consulta, diferente de editar/adicionar.
+    - Criado prototipo/favoritos.html: lista todos os acessorios
+      favoritados, de qualquer fabricante, com nome do fabricante junto
+      no card; mensagem de "nenhum favorito ainda" quando vazio.
+- prototipo/css/style.css: .phone virou position:relative (base pro
+  menu); novas classes .menu-btn, .menu-backdrop, .menu-lateral,
+  .menu-header, .menu-nav, .menu-info, .fav-btn, .fav-btn-floating.
+- ESCOPO.md atualizado: novas funcionalidades 9 (menu lateral) e 10
+  (favoritos); duas novas linhas na tabela de Telas.
+
+[2026-07-12] Icone de favorito trocado de coracao pra estrela
+- A pedido do usuario, trocado ♥/♡ (coracao) por ★/☆ (estrela) no botao
+  de favoritar (prototipo/js/app.js), no link do menu lateral (⭐
+  Favoritos, no lugar de ❤️) e no texto de "nenhum favorito ainda" da
+  tela Favoritos. Cor do icone ativo trocada de vermelho (#e0245e) pra
+  dourado (#f5a623), combinando mais com estrela do que com coracao.
+  Nenhuma mudanca de comportamento, so o simbolo/cor.
+
+[2026-07-12] Cancelar, aviso de saida, setas no passo a passo, selo em Favoritos
+- Depois de sugerir uma lista de melhorias, o usuario pediu 4 delas:
+  botao Cancelar, aviso ao sair com alteracoes nao salvas, setas do
+  teclado no passo a passo, e selo Catalogo/Meu na tela de Favoritos.
+- prototipo/passo.html: seta ← volta um passo (se nao for o primeiro) e
+  seta → avanca (ou volta pro Detalhe do acessorio, igual o botao
+  "Concluir", se for o ultimo passo).
+- prototipo/favoritos.html: cada card ganhou um selinho "Catalogo" (cinza)
+  ou "Meu" (verde) do lado do nome, pra ficar claro a origem do item ja
+  que a lista mistura fabricantes e itens diferentes.
+  prototipo/css/style.css: novas classes .origem-badge / .catalogo /
+  .usuario.
+- prototipo/adicionar.html:
+    - Novo botao "Cancelar" (abaixo de Salvar, nos dois formularios —
+      Acessorio e Fabricante). Volta pra tela de detalhe do item quando
+      esta editando, ou pra Inicio quando esta cadastrando novo.
+    - Aviso nativo do navegador ("sair sem salvar as alteracoes?") se a
+      pessoa tentar sair da tela com o formulario alterado e nao salvo —
+      vale pro botao Cancelar, pra seta de voltar do topo, pra fechar a
+      aba, atualizar a pagina, etc. (evento beforeunload). Uma variavel
+      formAlterado fica true assim que algum campo muda ou um passo e
+      adicionado/removido, e volta pra false logo depois de um Salvar
+      bem-sucedido (pra nao perguntar de novo achando que ainda ha
+      alteracao pendente).
+
+[2026-07-12] Melhorias de design (texto maior, cor por fabricante, icones, transicao)
+- Depois de sugerir uma lista de melhorias de design, o usuario pediu os
+  itens 2 a 6: texto maior no passo a passo, cor do fabricante em mais
+  lugares, icone por categoria, estados vazios mais amigaveis e transicao
+  suave entre telas.
+- Passo a passo (prototipo/passo.html + css): .step-text foi de 15px pra
+  18px (line-height 1.6) e os botoes de navegacao ficaram maiores
+  (padding 15px, fonte 16px), pra ler/tocar mais facil.
+- Cor do fabricante em mais lugares: usando a custom property CSS --cor
+  (que ja existia so no card da tela Inicio), agora tambem aparece no
+  botao "Ver instalacao", no numero de cada passo (tela de detalhe) e na
+  barra de progresso + botao "Proximo/Concluir" (passo a passo). Como e
+  so uma variavel CSS com fallback pro verde padrao (#2f6b4f), nao mudou
+  nada nas telas que nao setam --cor (login, adicionar, etc.).
+  prototipo/acessorio.html e prototipo/passo.html passaram a fazer
+  conteudo.style.setProperty("--cor", fabricante.cor) antes de montar a
+  tela.
+- Icone por categoria: nova funcao categoriaIcone(categoria) em
+  prototipo/js/app.js (reconhece palavras como "dobradica", "gaveta",
+  "corredica"/"trilho", "pe"/"nivelamento", "elevacao" e cai num 🔧
+  generico se nao reconhecer nada). Aparece do lado da categoria nos
+  cards de acessorio (fabricante.html, favoritos.html) e na tela de
+  detalhe (acessorio.html).
+- Estados vazios: nova funcao emptyState(icone, texto) em
+  prototipo/js/app.js, que gera o texto de "vazio" com um icone grande
+  em cima (nova classe .empty-icon). Aplicado em todas as mensagens de
+  vazio/nao encontrado do app (fabricante nao encontrado, nenhum item
+  encontrado na busca, nenhum acessorio proprio ainda, acessorio nao
+  encontrado, nenhum passo adicionado ainda, nenhum favorito ainda,
+  aviso de "precisa entrar" no Adicionar).
+- Transicao suave: prototipo/css/style.css - .phone ganhou uma animacao
+  de entrada (fade + leve deslize de baixo pra cima, .2s) que roda toda
+  vez que uma tela carrega, dando uma sensacao mais suave de navegacao
+  (como o app e varias paginas HTML separadas, nao da pra fazer uma
+  transicao de verdade entre a tela que sai e a que entra sem reescrever
+  a navegacao inteira - isso aqui e uma entrada suave em cada tela, nao
+  um cross-fade completo). Cards (.card) tambem ganharam uma transicao
+  suave na cor de fundo ao tocar, em vez de mudar instantaneo.
+
+===========================================================================
+PENDENCIAS / PROXIMOS PASSOS
+===========================================================================
+- Adicionar fotos de capa restantes: Corredica Tandem, Trilho telescopico,
+  Sistema Quadro.
+- Adicionar fotos de cada passo de instalacao (hoje todas usam o
+  placeholder generico).
+- Revisar/reescrever os textos de instalacao dos itens de catalogo (hoje
+  sao genericos, escritos como exemplo).
+- Validar as telas com o usuario final (montador) antes de decidir a stack
+  definitiva para gerar o app de verdade.
+- Definir a lista real de usuarios/senhas com acesso (hoje so tem 1 de
+  exemplo em prototipo/js/auth.js).

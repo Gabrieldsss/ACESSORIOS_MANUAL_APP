@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Adicionar</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="phone">
+  <div class="topbar">
+    <a href="index.html" class="back">←</a>
+    <h1 id="titulo-topo">Adicionar</h1>
+    <button type="button" class="menu-btn" id="btn-menu" aria-label="Abrir menu">☰</button>
+  </div>
+  <div class="content">
+    <div class="segmented" id="segmented-tipo">
+      <button type="button" id="tab-acessorio" class="active">Acessório</button>
+      <button type="button" id="tab-fabricante">Fabricante</button>
+    </div>
+
+    <div id="form-acessorio">
+      <div class="field">
+        <label>Fabricante</label>
+        <select id="input-fabricante"></select>
+      </div>
+
+      <div class="field">
+        <label>Foto do produto</label>
+        <label class="upload" id="upload-capa">
+          <span class="icon">📷</span>
+          <span>Toque para escolher uma foto</span>
+          <input type="file" accept="image/*" id="input-capa">
+        </label>
+      </div>
+
+      <div class="field">
+        <label>Nome do acessório</label>
+        <input type="text" id="input-nome" placeholder="Ex: Dobradiça Clip Top">
+      </div>
+
+      <div class="field">
+        <label>Categoria</label>
+        <input type="text" id="input-categoria" placeholder="Ex: Dobradiça, Corrediça, Pé...">
+      </div>
+
+      <div class="section-title">Passos de instalação</div>
+      <div id="lista-passos"></div>
+      <button class="btn-secondary" onclick="adicionarPasso()">+ Adicionar passo</button>
+
+      <div style="height:16px"></div>
+      <button class="btn-primary" onclick="salvarAcessorio()" id="btn-salvar-acessorio">Salvar acessório</button>
+      <button class="btn-secondary" type="button" onclick="cancelar()">Cancelar</button>
+    </div>
+
+    <div id="form-fabricante" style="display:none;">
+      <div class="field">
+        <label>Logo do fabricante</label>
+        <label class="upload" id="upload-logo-fabricante">
+          <span class="icon">🖼️</span>
+          <span>Toque para escolher uma logo (opcional)</span>
+          <input type="file" accept="image/*" id="input-fabricante-logo">
+        </label>
+      </div>
+
+      <div class="field">
+        <label>Nome do fabricante</label>
+        <input type="text" id="input-fabricante-nome" placeholder="Ex: Salice">
+      </div>
+
+      <div class="field">
+        <label>Cor de destaque</label>
+        <input type="color" id="input-fabricante-cor" value="#2f6b4f">
+      </div>
+
+      <div style="height:16px"></div>
+      <button class="btn-primary" onclick="salvarFabricante()" id="btn-salvar-fabricante">Salvar fabricante</button>
+      <button class="btn-secondary" type="button" onclick="cancelar()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/cropper.js"></script>
+<script src="js/menu.js"></script>
+<script>
+let capaBase64 = null;
+let capaOriginal = null;
+let logoFabricanteBase64 = null;
+let logoFabricanteOriginal = null;
+let passos = [];
+let formAlterado = false;
+
+function marcarAlterado() {
+  formAlterado = true;
+}
+
+document.addEventListener("input", (e) => {
+  if (e.target.closest("#form-acessorio, #form-fabricante")) marcarAlterado();
+});
+document.addEventListener("change", (e) => {
+  if (e.target.closest("#form-acessorio, #form-fabricante")) marcarAlterado();
+});
+window.addEventListener("beforeunload", (e) => {
+  if (!formAlterado) return;
+  e.preventDefault();
+  e.returnValue = "";
+});
+
+function cancelar() {
+  if (idEditarAcessorio) {
+    window.location.href = `acessorio.html?id=${idEditarAcessorio}`;
+  } else if (idEditarFabricante) {
+    window.location.href = `fabricante.html?id=${idEditarFabricante}`;
+  } else {
+    window.location.href = "index.html";
+  }
+}
+
+const idEditarAcessorio = getQueryParam("editarAcessorio");
+const idEditarFabricante = getQueryParam("editarFabricante");
+
+const selectFabricante = document.getElementById("input-fabricante");
+
+if (exigirLogin(window.location.href)) {
+  selectFabricante.innerHTML = getTodosFabricantes().map(f => `<option value="${f.id}">${f.nome}</option>`).join("");
+
+  if (idEditarAcessorio) {
+    iniciarEdicaoAcessorio();
+  } else if (idEditarFabricante) {
+    iniciarEdicaoFabricante();
+  } else {
+    const fabricantePreSelecionado = getQueryParam("fabricante");
+    if (fabricantePreSelecionado && getFabricantePorId(fabricantePreSelecionado)) {
+      selectFabricante.value = fabricantePreSelecionado;
+    }
+  }
+
+  document.getElementById("tab-acessorio").addEventListener("click", () => mostrarAba("acessorio"));
+  document.getElementById("tab-fabricante").addEventListener("click", () => mostrarAba("fabricante"));
+
+  document.addEventListener("change", (e) => {
+    if (e.target.id === "input-capa") {
+      const file = e.target.files[0];
+      if (!file) return;
+      abrirRecorte(file, "4/3", "jpeg", (dataUrl) => {
+        capaBase64 = dataUrl;
+        capaOriginal = null;
+        refletirCapaPreview();
+      });
+    }
+    if (e.target.id === "input-fabricante-logo") {
+      const file = e.target.files[0];
+      if (!file) return;
+      abrirRecorte(file, "1/1", "png", (dataUrl) => {
+        logoFabricanteBase64 = dataUrl;
+        logoFabricanteOriginal = null;
+        refletirLogoPreview();
+      });
+    }
+  });
+
+  renderPassos();
+} else {
+  document.querySelector(".content").innerHTML = emptyState("🔒", "É preciso entrar para adicionar ou editar fabricantes e acessórios. Redirecionando para o login...");
+}
+
+function iniciarEdicaoAcessorio() {
+  const original = getAcessorioPorId(idEditarAcessorio);
+  if (!original) {
+    alert("Acessório não encontrado.");
+    window.location.href = "index.html";
+    return;
+  }
+  document.getElementById("titulo-topo").textContent = "Editar acessório";
+  document.getElementById("segmented-tipo").style.display = "none";
+  document.getElementById("form-fabricante").style.display = "none";
+  document.getElementById("btn-salvar-acessorio").textContent = "Salvar alterações";
+
+  selectFabricante.value = original.fabricanteId;
+  document.getElementById("input-nome").value = original.nome;
+  document.getElementById("input-categoria").value = original.categoria;
+
+  capaBase64 = original.imagemBase64 || null;
+  capaOriginal = original.imagemBase64 ? null : (original.imagem || null);
+  refletirCapaPreview();
+
+  passos = original.passos.map(p => ({
+    texto: p.texto,
+    imagemBase64: p.imagemBase64 || null,
+    imagemOriginal: p.imagemBase64 ? null : (p.imagem || null)
+  }));
+}
+
+function iniciarEdicaoFabricante() {
+  const original = getFabricantePorId(idEditarFabricante);
+  if (!original) {
+    alert("Fabricante não encontrado.");
+    window.location.href = "index.html";
+    return;
+  }
+  document.getElementById("titulo-topo").textContent = "Editar fabricante";
+  document.getElementById("segmented-tipo").style.display = "none";
+  mostrarAba("fabricante");
+  document.getElementById("btn-salvar-fabricante").textContent = "Salvar alterações";
+
+  document.getElementById("input-fabricante-nome").value = original.nome;
+  document.getElementById("input-fabricante-cor").value = original.cor || "#2f6b4f";
+
+  logoFabricanteBase64 = original.logoBase64 || null;
+  logoFabricanteOriginal = original.logoBase64 ? null : (original.logo || null);
+  refletirLogoPreview();
+}
+
+function refletirCapaPreview() {
+  const el = document.getElementById("upload-capa");
+  if (capaBase64) {
+    el.innerHTML = `<img src="${capaBase64}"><input type="file" accept="image/*" id="input-capa">`;
+  } else if (capaOriginal) {
+    el.innerHTML = `${assetImg(capaOriginal, "Foto atual")}<input type="file" accept="image/*" id="input-capa">`;
+  }
+}
+
+function refletirLogoPreview() {
+  const el = document.getElementById("upload-logo-fabricante");
+  if (logoFabricanteBase64) {
+    el.innerHTML = `<img src="${logoFabricanteBase64}"><input type="file" accept="image/*" id="input-fabricante-logo">`;
+  } else if (logoFabricanteOriginal) {
+    el.innerHTML = `${assetImg(logoFabricanteOriginal, "Logo atual")}<input type="file" accept="image/*" id="input-fabricante-logo">`;
+  }
+}
+
+function mostrarAba(aba) {
+  document.getElementById("tab-acessorio").classList.toggle("active", aba === "acessorio");
+  document.getElementById("tab-fabricante").classList.toggle("active", aba === "fabricante");
+  document.getElementById("form-acessorio").style.display = aba === "acessorio" ? "block" : "none";
+  document.getElementById("form-fabricante").style.display = aba === "fabricante" ? "block" : "none";
+}
+
+function adicionarPasso() {
+  passos.push({ texto: "", imagemBase64: null, imagemOriginal: null });
+  marcarAlterado();
+  renderPassos();
+}
+
+function removerPasso(i) {
+  passos.splice(i, 1);
+  marcarAlterado();
+  renderPassos();
+}
+
+function onImagemPasso(i, input) {
+  const file = input.files[0];
+  if (!file) return;
+  abrirRecorte(file, "1/1", "jpeg", (dataUrl) => {
+    passos[i].imagemBase64 = dataUrl;
+    passos[i].imagemOriginal = null;
+    renderPassos();
+  });
+}
+
+function onTextoPasso(i, value) {
+  passos[i].texto = value;
+}
+
+function renderPassos() {
+  const container = document.getElementById("lista-passos");
+  container.innerHTML = passos.map((p, i) => `
+    <div class="step-card">
+      <button class="remove" onclick="removerPasso(${i})">Remover</button>
+      <div class="field">
+        <label>Passo ${i + 1} — Foto</label>
+        <label class="upload">
+          ${p.imagemBase64 ? `<img src="${p.imagemBase64}">` : (p.imagemOriginal ? assetImg(p.imagemOriginal, "Foto atual") : `<span class="icon">🖼️</span><span>Escolher foto do passo</span>`)}
+          <input type="file" accept="image/*" onchange="onImagemPasso(${i}, this)">
+        </label>
+      </div>
+      <div class="field">
+        <label>Descrição do passo</label>
+        <textarea placeholder="Explique o que fazer neste passo..." oninput="onTextoPasso(${i}, this.value)">${p.texto}</textarea>
+      </div>
+    </div>
+  `).join("") || emptyState("📋", "Nenhum passo adicionado ainda.");
+}
+
+function salvarAcessorio() {
+  if (!estaLogado()) { window.location.href = "login.html"; return; }
+  const fabricanteId = selectFabricante.value;
+  const nome = document.getElementById("input-nome").value.trim();
+  const categoria = document.getElementById("input-categoria").value.trim();
+
+  if (!fabricanteId) { alert("Cadastre um fabricante antes de adicionar um acessório."); return; }
+  if (!nome) { alert("Informe o nome do acessório."); return; }
+  if (!categoria) { alert("Informe a categoria do acessório."); return; }
+  if (passos.length === 0) { alert("Adicione pelo menos um passo."); return; }
+  if (passos.some(p => !p.texto.trim())) { alert("Preencha a descrição de todos os passos."); return; }
+
+  const passosFinal = passos.map(p => {
+    if (p.imagemBase64) return { texto: p.texto, imagemBase64: p.imagemBase64 };
+    if (p.imagemOriginal) return { texto: p.texto, imagem: p.imagemOriginal };
+    return { texto: p.texto };
+  });
+
+  if (idEditarAcessorio) {
+    const patch = { fabricanteId, nome, categoria, passos: passosFinal };
+    if (capaBase64) patch.imagemBase64 = capaBase64;
+    editarAcessorio(idEditarAcessorio, patch);
+    formAlterado = false;
+    window.location.href = `acessorio.html?id=${idEditarAcessorio}`;
+    return;
+  }
+
+  const acessorio = {
+    id: "user-" + Date.now(),
+    fabricanteId,
+    nome,
+    categoria,
+    origem: "usuario",
+    imagemBase64: capaBase64,
+    passos: passosFinal
+  };
+
+  salvarMeuAcessorio(acessorio);
+  formAlterado = false;
+  window.location.href = `fabricante.html?id=${fabricanteId}`;
+}
+
+function slugify(texto) {
+  return texto
+    .toLowerCase()
+    .normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+function salvarFabricante() {
+  if (!estaLogado()) { window.location.href = "login.html"; return; }
+  const nome = document.getElementById("input-fabricante-nome").value.trim();
+  const cor = document.getElementById("input-fabricante-cor").value || "#2f6b4f";
+
+  if (!nome) { alert("Informe o nome do fabricante."); return; }
+
+  if (idEditarFabricante) {
+    const patch = { nome, cor };
+    if (logoFabricanteBase64) patch.logoBase64 = logoFabricanteBase64;
+    editarFabricante(idEditarFabricante, patch);
+    formAlterado = false;
+    window.location.href = `fabricante.html?id=${idEditarFabricante}`;
+    return;
+  }
+
+  const id = `fabricante-${slugify(nome)}-${Date.now().toString(36)}`;
+  const fabricante = { id, nome, cor, origem: "usuario", logoBase64: logoFabricanteBase64 };
+
+  salvarMeuFabricante(fabricante);
+  formAlterado = false;
+  window.location.href = `fabricante.html?id=${id}`;
+}
+</script>
+</body>
+</html>

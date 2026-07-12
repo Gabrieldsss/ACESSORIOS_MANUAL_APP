@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Manual do Montador - Madeirol</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="phone">
+  <div class="topbar">
+    <h1>Manual do Montador - Madeirol</h1>
+    <button type="button" class="menu-btn" id="btn-menu" aria-label="Abrir menu">☰</button>
+  </div>
+  <div class="content">
+    <div class="section-title">Fabricantes</div>
+    <div class="fabricante-list" id="lista-fabricantes"></div>
+  </div>
+
+  <div class="tabbar">
+    <a href="index.html" class="active"><span class="icon">🏠</span>Início</a>
+    <a href="adicionar.html"><span class="icon">➕</span>Adicionar</a>
+    <a href="login.html"><span class="icon">👤</span>Conta</a>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/menu.js"></script>
+<script>
+function renderFabricantes() {
+  document.getElementById("lista-fabricantes").innerHTML = getTodosFabricantes().map((fabricante) => {
+    const qtd = getAcessoriosPorFabricante(fabricante.id);
+    const total = qtd.catalogo.length + qtd.meus.length;
+    return `<a class="fabricante-card" style="--cor:${fabricante.cor}" href="fabricante.html?id=${fabricante.id}">
+      ${logoImg(fabricante)}
+      <div class="info">
+        <strong>${fabricante.nome}</strong>
+        <span>${total} acessório${total === 1 ? "" : "s"} cadastrado${total === 1 ? "" : "s"}</span>
+      </div>
+    </a>`;
+  }).join("");
+}
+
+renderFabricantes();
+</script>
+</body>
+</html>

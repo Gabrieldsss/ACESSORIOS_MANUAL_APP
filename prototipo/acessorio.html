@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Detalhe do Acessório</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="phone">
+  <div class="topbar">
+    <a href="#" id="link-voltar" class="back">←</a>
+    <h1 id="titulo-topo">Acessório</h1>
+    <button type="button" class="menu-btn" id="btn-menu" aria-label="Abrir menu">☰</button>
+  </div>
+  <div class="content" id="conteudo"></div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/menu.js"></script>
+<script>
+const id = getQueryParam("id");
+const acessorio = getAcessorioPorId(id);
+const conteudo = document.getElementById("conteudo");
+
+if (!acessorio) {
+  conteudo.innerHTML = emptyState("❓", "Acessório não encontrado.");
+  document.getElementById("link-voltar").href = "index.html";
+} else {
+  const fabricante = getFabricantePorId(acessorio.fabricanteId);
+  document.getElementById("link-voltar").href = `fabricante.html?id=${acessorio.fabricanteId}`;
+  document.getElementById("titulo-topo").textContent = acessorio.nome;
+
+  const podeGerenciar = estaLogado();
+
+  conteudo.style.setProperty("--cor", fabricante.cor);
+  conteudo.innerHTML = `
+    <div class="cover">
+      ${thumbHtml(acessorio)}
+      ${favoritoBtn(acessorio.id, "fav-btn-floating")}
+    </div>
+    <div class="brand-badge">${logoImg(fabricante)} ${fabricante.nome}</div>
+    <div class="meta">
+      <h2>${acessorio.nome}</h2>
+      <div class="cat">${categoriaIcone(acessorio.categoria)} ${acessorio.categoria} · ${acessorio.passos.length} passos</div>
+    </div>
+    <a class="btn-primary" href="passo.html?id=${acessorio.id}&step=0">Ver instalação</a>
+
+    <div class="section-title">Passo a passo</div>
+    <div class="step-list">
+      ${acessorio.passos.map((p, i) => `
+        <div class="step-row">
+          <div class="num">${i + 1}</div>
+          <div>${p.texto}</div>
+        </div>
+      `).join("")}
+    </div>
+
+    ${podeGerenciar ? `
+      <div style="height:16px"></div>
+      <a class="btn-secondary" href="adicionar.html?editarAcessorio=${acessorio.id}">Editar acessório</a>
+      <div style="height:10px"></div>
+      <button class="btn-danger" id="btn-remover">Remover acessório</button>
+    ` : ""}
+  `;
+
+  if (podeGerenciar) {
+    document.getElementById("btn-remover").addEventListener("click", () => {
+      if (confirm(`Remover "${acessorio.nome}"? Essa ação não pode ser desfeita.`)) {
+        removerAcessorio(acessorio.id);
+        window.location.href = `fabricante.html?id=${acessorio.fabricanteId}`;
+      }
+    });
+  }
+}
+</script>
+</body>
+</html>

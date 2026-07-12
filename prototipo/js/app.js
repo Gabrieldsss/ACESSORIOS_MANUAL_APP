@@ -1,0 +1,78 @@
+function getQueryParam(name) {
+  return new URLSearchParams(window.location.search).get(name);
+}
+
+function assetImg(path, label) {
+  const safeLabel = (label || path).replace(/"/g, "&quot;");
+  return `<div class="asset-slot">
+    <img src="${path}" alt="${safeLabel}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+    <div class="asset-fallback"><span>🖼️</span><small>${path}</small></div>
+  </div>`;
+}
+
+function logoImg(fabricante) {
+  if (fabricante.logoBase64) {
+    return `<div class="logo-slot"><img src="${fabricante.logoBase64}" alt="Logo ${fabricante.nome}"></div>`;
+  }
+  if (!fabricante.logo) {
+    return `<div class="logo-slot"><div class="logo-fallback" style="display:flex;color:${fabricante.cor}">${fabricante.nome}</div></div>`;
+  }
+  return `<div class="logo-slot">
+    <img src="${fabricante.logo}" alt="Logo ${fabricante.nome}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+    <div class="logo-fallback" style="color:${fabricante.cor}">${fabricante.nome}</div>
+  </div>`;
+}
+
+function thumbHtml(acessorio) {
+  if (acessorio.imagemBase64) {
+    return `<img src="${acessorio.imagemBase64}" alt="${acessorio.nome}">`;
+  }
+  return assetImg(acessorio.imagem, acessorio.nome);
+}
+
+function stepImageHtml(passo) {
+  if (passo.imagemBase64) {
+    return `<img src="${passo.imagemBase64}" alt="Imagem do passo">`;
+  }
+  if (passo.imagem) {
+    return assetImg(passo.imagem, "Imagem do passo");
+  }
+  return `<span>🖼️</span>`;
+}
+
+function categoriaIcone(categoria) {
+  const c = (categoria || "").toLowerCase();
+  if (c.includes("dobradiç") || c.includes("dobradic")) return "🚪";
+  if (c.includes("gaveta")) return "🗄️";
+  if (c.includes("corrediç") || c.includes("corredic") || c.includes("trilho")) return "📏";
+  if (c.includes("pé") || c.includes("nivelamento")) return "🦶";
+  if (c.includes("elevaç") || c.includes("elevac")) return "⬆️";
+  return "🔧";
+}
+
+function emptyState(icone, texto) {
+  return `<div class="empty"><div class="empty-icon">${icone}</div><div>${texto}</div></div>`;
+}
+
+function favoritoBtn(id, classeExtra) {
+  const ativo = isFavorito(id);
+  const rotulo = ativo ? "Remover dos favoritos" : "Adicionar aos favoritos";
+  return `<button type="button" class="fav-btn ${classeExtra || ""} ${ativo ? "ativo" : ""}" data-fav-id="${id}" title="${rotulo}" aria-label="${rotulo}">${ativo ? "★" : "☆"}</button>`;
+}
+
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest(".fav-btn");
+  if (!btn) return;
+  e.preventDefault();
+  e.stopPropagation();
+  const id = btn.dataset.favId;
+  const ativo = alternarFavorito(id);
+  const rotulo = ativo ? "Remover dos favoritos" : "Adicionar aos favoritos";
+  document.querySelectorAll(`.fav-btn[data-fav-id="${id}"]`).forEach((b) => {
+    b.classList.toggle("ativo", ativo);
+    b.textContent = ativo ? "★" : "☆";
+    b.title = rotulo;
+    b.setAttribute("aria-label", rotulo);
+  });
+  document.dispatchEvent(new CustomEvent("favoritos:mudou", { detail: { id, ativo } }));
+});
