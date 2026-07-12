@@ -80,6 +80,7 @@
   </div>
 </div>
 
+<script src="js/api.js"></script>
 <script src="js/data.js"></script>
 <script src="js/app.js"></script>
 <script src="js/auth.js"></script>
@@ -125,7 +126,13 @@ const idEditarFabricante = getQueryParam("editarFabricante");
 
 const selectFabricante = document.getElementById("input-fabricante");
 
-if (exigirLogin(window.location.href)) {
+async function iniciar() {
+  if (!exigirPermissaoAdicionar(window.location.href)) {
+    document.querySelector(".content").innerHTML = emptyState("🔒", "É preciso entrar para adicionar ou editar fabricantes e acessórios. Redirecionando para o login...");
+    return;
+  }
+
+  await sincronizarCatalogo();
   selectFabricante.innerHTML = getTodosFabricantes().map(f => `<option value="${f.id}">${f.nome}</option>`).join("");
 
   if (idEditarAcessorio) {
@@ -164,9 +171,9 @@ if (exigirLogin(window.location.href)) {
   });
 
   renderPassos();
-} else {
-  document.querySelector(".content").innerHTML = emptyState("🔒", "É preciso entrar para adicionar ou editar fabricantes e acessórios. Redirecionando para o login...");
 }
+
+iniciar();
 
 function iniciarEdicaoAcessorio() {
   const original = getAcessorioPorId(idEditarAcessorio);
@@ -286,8 +293,8 @@ function renderPassos() {
   `).join("") || emptyState("📋", "Nenhum passo adicionado ainda.");
 }
 
-function salvarAcessorio() {
-  if (!estaLogado()) { window.location.href = "login.html"; return; }
+async function salvarAcessorio() {
+  if (!podeAdicionar()) { window.location.href = "login.html"; return; }
   const fabricanteId = selectFabricante.value;
   const nome = document.getElementById("input-nome").value.trim();
   const categoria = document.getElementById("input-categoria").value.trim();
@@ -304,60 +311,56 @@ function salvarAcessorio() {
     return { texto: p.texto };
   });
 
-  if (idEditarAcessorio) {
-    const patch = { fabricanteId, nome, categoria, passos: passosFinal };
-    if (capaBase64) patch.imagemBase64 = capaBase64;
-    editarAcessorio(idEditarAcessorio, patch);
+  const btn = document.getElementById("btn-salvar-acessorio");
+  btn.disabled = true;
+  try {
+    if (idEditarAcessorio) {
+      const patch = { fabricanteId, nome, categoria, passos: passosFinal };
+      if (capaBase64) patch.imagemBase64 = capaBase64;
+      await editarAcessorio(idEditarAcessorio, patch);
+      formAlterado = false;
+      window.location.href = `acessorio.html?id=${idEditarAcessorio}`;
+      return;
+    }
+
+    const acessorio = { fabricanteId, nome, categoria, imagemBase64: capaBase64, passos: passosFinal };
+    await criarAcessorio(acessorio);
     formAlterado = false;
-    window.location.href = `acessorio.html?id=${idEditarAcessorio}`;
-    return;
+    window.location.href = `fabricante.html?id=${fabricanteId}`;
+  } catch (e) {
+    alert(e.message);
+  } finally {
+    btn.disabled = false;
   }
-
-  const acessorio = {
-    id: "user-" + Date.now(),
-    fabricanteId,
-    nome,
-    categoria,
-    origem: "usuario",
-    imagemBase64: capaBase64,
-    passos: passosFinal
-  };
-
-  salvarMeuAcessorio(acessorio);
-  formAlterado = false;
-  window.location.href = `fabricante.html?id=${fabricanteId}`;
 }
 
-function slugify(texto) {
-  return texto
-    .toLowerCase()
-    .normalize("NFD").replace(/[̀-ͯ]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-}
-
-function salvarFabricante() {
-  if (!estaLogado()) { window.location.href = "login.html"; return; }
+async function salvarFabricante() {
+  if (!podeAdicionar()) { window.location.href = "login.html"; return; }
   const nome = document.getElementById("input-fabricante-nome").value.trim();
   const cor = document.getElementById("input-fabricante-cor").value || "#2f6b4f";
 
   if (!nome) { alert("Informe o nome do fabricante."); return; }
 
-  if (idEditarFabricante) {
-    const patch = { nome, cor };
-    if (logoFabricanteBase64) patch.logoBase64 = logoFabricanteBase64;
-    editarFabricante(idEditarFabricante, patch);
+  const btn = document.getElementById("btn-salvar-fabricante");
+  btn.disabled = true;
+  try {
+    if (idEditarFabricante) {
+      const patch = { nome, cor };
+      if (logoFabricanteBase64) patch.logoBase64 = logoFabricanteBase64;
+      await editarFabricante(idEditarFabricante, patch);
+      formAlterado = false;
+      window.location.href = `fabricante.html?id=${idEditarFabricante}`;
+      return;
+    }
+
+    const criado = await criarFabricante({ nome, cor, logoBase64: logoFabricanteBase64 });
     formAlterado = false;
-    window.location.href = `fabricante.html?id=${idEditarFabricante}`;
-    return;
+    window.location.href = `fabricante.html?id=${criado.id}`;
+  } catch (e) {
+    alert(e.message);
+  } finally {
+    btn.disabled = false;
   }
-
-  const id = `fabricante-${slugify(nome)}-${Date.now().toString(36)}`;
-  const fabricante = { id, nome, cor, origem: "usuario", logoBase64: logoFabricanteBase64 };
-
-  salvarMeuFabricante(fabricante);
-  formAlterado = false;
-  window.location.href = `fabricante.html?id=${id}`;
 }
 </script>
 </body>

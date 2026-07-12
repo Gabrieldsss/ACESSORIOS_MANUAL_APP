@@ -17,11 +17,12 @@
 
   <div class="tabbar">
     <a href="index.html"><span class="icon">🏠</span>Início</a>
-    <a href="adicionar.html"><span class="icon">➕</span>Adicionar</a>
+    <a href="adicionar.html" id="tab-adicionar"><span class="icon">➕</span>Adicionar</a>
     <a href="login.html" class="active"><span class="icon">👤</span>Conta</a>
   </div>
 </div>
 
+<script src="js/api.js"></script>
 <script src="js/data.js"></script>
 <script src="js/app.js"></script>
 <script src="js/auth.js"></script>
@@ -32,12 +33,15 @@ const conteudo = document.getElementById("conteudo");
 const next = getQueryParam("next");
 
 function renderLogado(usuarioLogado) {
+  const permitido = podeAdicionar();
   conteudo.innerHTML = `
     <div class="account-box">
       <div class="account-avatar">👤</div>
       <strong>${usuarioLogado.nome}</strong>
       <span>Usuário: ${usuarioLogado.usuario}</span>
-      <div class="account-badge">✓ Acesso liberado para editar</div>
+      ${permitido
+        ? `<div class="account-badge">✓ Acesso liberado para editar</div>`
+        : `<p class="hint" style="text-align:center;">Sua conta não tem permissão para adicionar ou editar.</p>`}
     </div>
     <p class="hint" style="text-align:center;">Login somente para edição.</p>
     <button class="btn-secondary" id="btn-sair">Sair</button>
@@ -91,13 +95,17 @@ function renderDeslogado(erro) {
   });
 }
 
-function tentarLogin() {
+async function tentarLogin() {
   const usuario = document.getElementById("input-usuario").value.trim();
   const senha = document.getElementById("input-senha").value;
-  if (fazerLogin(usuario, senha)) {
+  const btn = document.getElementById("btn-entrar");
+  btn.disabled = true;
+  btn.textContent = "Entrando...";
+  try {
+    await fazerLogin(usuario, senha);
     window.location.href = next || "index.html";
-  } else {
-    renderDeslogado("Usuário ou senha incorretos.");
+  } catch (e) {
+    renderDeslogado(e.message);
   }
 }
 

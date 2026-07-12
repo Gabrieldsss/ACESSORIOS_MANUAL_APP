@@ -6,9 +6,12 @@ O QUE E O PROJETO
 App de apoio para montadores de moveis: catalogo de acessorios/ferragens
 organizados por fabricante (Blum, Hafele, Hettich), com imagem,
 especificacoes e passo a passo de instalacao. A base e um PROTOTIPO em
-HTML/CSS/JS puro (sem backend), que agora tambem e empacotado com
-Capacitor num app Android instalavel (APK) que roda 100% OFFLINE (os
-arquivos ficam dentro do APK, nao carrega de nenhum site).
+HTML/CSS/JS puro, empacotado com Capacitor num app Android instalavel
+(APK). Desde 2026-07-12 tem um BACKEND de verdade (Node/Express +
+Postgres) - o catalogo e o login sao compartilhados entre todo mundo que
+usa o app; o app continua funcionando OFFLINE pra CONSULTAR (usa uma
+copia em cache), so precisa de internet pra login e pra adicionar/
+editar/remover.
 
 Estrutura principal:
 - ESCOPO.md            -> documento de escopo (funcionalidades, telas, fluxo)
@@ -18,20 +21,26 @@ Estrutura principal:
     fabricante.html     -> lista de acessorios de um fabricante (ex-marca.html)
     acessorio.html      -> detalhe do acessorio
     passo.html          -> passo a passo de instalacao (imagem + texto)
-    adicionar.html      -> cadastro/edicao de fabricante e acessorio proprio (upload de fotos, exige login)
+    adicionar.html      -> cadastro/edicao de fabricante e acessorio proprio (upload de fotos, exige login com permissao)
     login.html          -> tela de login / conta (usuario logado, sair)
     favoritos.html      -> lista de acessorios marcados como favoritos
     css/style.css        -> estilo visual (tela em formato de celular)
-    js/data.js            -> fabricantes, catalogo de acessorios, favoritos, localStorage
+    js/api.js              -> fala com o backend (fetch com token, timeout, erro de "sem internet")
+    js/data.js            -> cache local do catalogo (sincronizado do backend) + favoritos (so local)
     js/app.js             -> funcoes auxiliares (imagens, logos, query params, botao de favorito)
-    js/auth.js             -> login de protótipo (usuarios fixos, sem backend)
+    js/auth.js             -> login de verdade via backend (token JWT guardado no localStorage)
     js/cropper.js          -> editor de recorte/zoom de foto antes de salvar
     js/menu.js             -> menu lateral (favoritos + versao do app)
     js/versao.js            -> numero da versao atual do app (VERSAO_APP)
     js/atualizacao.js       -> verifica versao nova no GitHub Releases e avisa
-    assets/logos/          -> logos dos fabricantes
-    assets/produtos/       -> fotos dos acessorios e dos passos
+    assets/logos/          -> logos dos 3 fabricantes originais (catalogo)
+    assets/produtos/       -> fotos dos acessorios/passos do catalogo original
     assets/README.md       -> lista exata dos arquivos de imagem esperados
+- backend/              -> API (Node/Express + Postgres) - ver ESCOPO.md > "Backend"
+    server.js            -> rotas (auth, catalogo, fabricantes, acessorios)
+    db.js / schema.sql    -> conexao com Postgres e schema das tabelas
+    auth.js               -> hash de senha, gera/valida token JWT
+    seed.js               -> popula o catalogo original + usuario de exemplo
 - android/              -> projeto nativo Android gerado pelo Capacitor
                            (gerado automaticamente, nao editar na mao;
                            refletir mudancas rodando "npx cap sync android")
@@ -544,14 +553,152 @@ HISTORICO DE ALTERACOES
   o jeito de resolver e: parar o daemon (gradlew --stop), apagar a pasta
   "build" travada manualmente, e rodar de novo com --no-daemon.
 
+[2026-07-12] Remove separacao "Meus Acessorios" + aba Adicionar exige permissao
+- A pedido do usuario: (1) a tela do fabricante nao faz mais sentido
+  separar "Catalogo" de "Meus Acessorios" em duas secoes - virou uma
+  lista unica "Acessorios", com um selinho "Catalogo"/"Meu" em cada card
+  (reaproveitando a mesma classe .origem-badge ja usada em favoritos.html)
+  pra ainda dar pra saber a origem do item. (2) a aba "Adicionar" da
+  barra inferior (e o botao flutuante "+") deve aparecer so pra quem tem
+  permissao, nao pra qualquer visitante deslogado.
+- prototipo/fabricante.html: unificadas as listas "Catalogo" e "Meus
+  Acessorios" (ids lista-catalogo/lista-meus) numa unica lista
+  #lista-acessorios com estado vazio unico; card() ganhou o selo de
+  origem. fab-adicionar agora e acessado com guarda (pode ter sido
+  removido pela logica de permissao, ver abaixo).
+- prototipo/js/auth.js: cada usuario em USUARIOS ganhou um campo
+  podeAdicionar (true para o usuario "montador" existente). Nova funcao
+  podeAdicionar() (le a permissao de USUARIOS pelo usuario logado, nao
+  do que ficou salvo no localStorage, pra refletir na hora se a
+  permissao mudar no codigo). Nova funcao exigirPermissaoAdicionar()
+  (igual exigirLogin, mas tambem exige podeAdicionar). Novo bloco que
+  roda direto ao carregar auth.js: remove os elementos #tab-adicionar
+  (aba da barra inferior) e #fab-adicionar (botao flutuante) do DOM pra
+  quem nao tem permissao - funciona em qualquer pagina que inclua
+  auth.js depois do HTML da tabbar/fab, sem precisar duplicar logica em
+  cada arquivo.
+- prototipo/index.html, fabricante.html, favoritos.html, login.html:
+  link "Adicionar" da tabbar ganhou id="tab-adicionar" (usado pelo
+  bloco novo de auth.js acima).
+- prototipo/adicionar.html: troca exigirLogin() por
+  exigirPermissaoAdicionar() na entrada da tela; os dois pontos que
+  salvam (salvarAcessorio/salvarFabricante) passaram a checar
+  podeAdicionar() em vez de so estaLogado().
+- prototipo/login.html: tela de conta (logado) so mostra o selo "Acesso
+  liberado para editar" se a conta tiver podeAdicionar; senao mostra um
+  aviso de que a conta nao tem permissao (evita mensagem contraditoria
+  pra uma conta futura sem permissao).
+- Testado com Playwright (headless) simulando deslogado e logado com o
+  usuario de exemplo: deslogado, a tabbar so mostra Inicio/Conta (sem
+  Adicionar) e o "+" nao aparece; logado com podeAdicionar:true, os dois
+  aparecem normalmente. Nenhum erro de console alem dos 404 esperados de
+  imagem sem arquivo (placeholder normal do app).
+- ESCOPO.md atualizado: funcionalidade 7 (login) menciona a permissao
+  por usuario; tabela de Telas ajustada (Fabricante = lista unica,
+  Adicionar/Editar exige permissao, nao so login); Proximos passos
+  menciona definir tambem a permissao de cada pessoa, nao so quem tem
+  login.
+
+[2026-07-12] Backend de verdade (Node/Express + Postgres) - catalogo e login compartilhados
+- A pedido do usuario: os dois motivos eram igual importantes -
+  compartilhar entre montadores o que e cadastrado (antes ficava so no
+  localStorage de cada aparelho) e ter login/senha de verdade (antes era
+  so client-side, senha visivel no JS). Decidido manter consulta 100%
+  offline (cache local), so exigir internet pra login e pra adicionar/
+  editar/remover; stack escolhida foi Node.js + Express + Postgres
+  gratuito na nuvem. Entrei em plan mode pra desenhar a arquitetura antes
+  de mexer em qualquer arquivo (plano aprovado pelo usuario).
+- Criada a pasta backend/ na raiz do projeto: server.js (rotas Express),
+  db.js (pool de conexao pg + roda schema.sql automaticamente ao subir),
+  auth.js (hash de senha com bcryptjs, gera/valida token JWT com
+  jsonwebtoken), schema.sql (4 tabelas: usuarios, fabricantes,
+  acessorios, passos - fabricante->acessorio->passo com ON DELETE
+  CASCADE, entao remover fabricante ja remove os acessorios sozinho via
+  banco), seed.js (popula os 3 fabricantes + 6 acessorios originais,
+  copiados de data.js, e o usuario "montador"/"1234" com
+  pode_adicionar=true). Sem ORM - SQL direto, schema pequeno o
+  suficiente pra nao precisar de Prisma/Knex.
+- Rotas: POST /auth/login (publica), GET /catalogo (publica - e o que o
+  app consulta, inclusive offline via cache), POST/PUT/DELETE
+  /fabricantes[/:id] e /acessorios[/:id] (exigem token valido E
+  pode_adicionar - middlewares exigirLogin/exigirPermissaoAdicionar em
+  backend/auth.js). Imagem do catalogo original continua apontando pro
+  arquivo em prototipo/assets/ (colunas logo/imagem no banco, mesmo
+  esquema de slot-com-fallback de sempre); o que e cadastrado pelo
+  usuario continua indo como base64 (colunas logo_base64/imagem_base64),
+  sem precisar de servico de storage separado.
+- Banco escolhido: Neon (Postgres serverless gratuito) - o usuario criou
+  a conta e passou a connection string, que fica em backend/.env (fora
+  do git, so backend/.env.example e commitado). JWT_SECRET gerado com
+  crypto.randomBytes.
+- Cliente (prototipo/) reescrito pra falar com o backend:
+    - Novo js/api.js: API_BASE_URL (hoje http://localhost:3000, trocar
+      quando publicar), apiGet/apiPost/apiPut/apiDelete (fetch com
+      header Authorization: Bearer <token>, timeout de 6s via
+      AbortController pra nao travar a tela esperando quando estiver
+      offline), classe ErroSemInternet.
+    - js/auth.js: USUARIOS fixo (lista no JS) saiu; fazerLogin() virou
+      async e chama POST /auth/login; guarda
+      {token, usuario, nome, podeAdicionar} no localStorage
+      ("usuarioLogado", mesma chave de antes). estaLogado()/exigirLogin()
+      removidos por ficarem sem uso (so exigirPermissaoAdicionar era
+      chamado). podeAdicionar() continua sincrona, so le o que ja esta
+      no localStorage.
+    - js/data.js: consts FABRICANTES/CATALOGO e toda a logica de
+      "sobreposicao" (fabricantesEditados, acessoriosRemovidos etc.)
+      saíram - essa responsabilidade e do backend agora. Nova
+      sincronizarCatalogo() (async): busca GET /catalogo, guarda em
+      localStorage.catalogoCache; falha em silencio se estiver offline
+      (mantem o cache antigo). Leitura (getTodosFabricantes,
+      getAcessorioPorId etc.) continua sincrona, so que le do cache.
+      Escrita (criarFabricante, editarFabricante, removerFabricante,
+      criarAcessorio, editarAcessorio, removerAcessorio) virou async,
+      fala com a API e resincroniza o cache depois. Favoritos nao
+      mudaram nada - continuam 100% locais.
+    - Paginas HTML (index, fabricante, acessorio, passo, favoritos,
+      adicionar, login) passaram a chamar
+      "sincronizarCatalogo().then(render)" antes de desenhar a tela (em
+      vez de renderizar direto de uma const sincrona), e os botoes de
+      salvar/editar/remover viram handlers async com try/catch mostrando
+      a mensagem de erro (ex: "Sem internet ou o servidor esta fora do
+      ar.") em vez de travar. IDs de fabricante/acessorio novo passaram
+      a ser gerados no servidor (gerarId em backend/server.js), nao mais
+      no cliente.
+    - Corrigido de passagem: acessorio.html e fabricante.html usavam
+      estaLogado() pra mostrar os botoes Editar/Remover - trocado pra
+      podeAdicionar(), senao uma conta logada sem permissao veria os
+      botoes e a acao falharia (403) so na hora de salvar.
+- Testado localmente contra o banco Neon real: via curl (login certo/
+  errado, 401 sem token, 403 sem permissao - criado e depois removido um
+  usuario de teste "visitante" so pra confirmar isso -, criar/editar/
+  remover fabricante e acessorio, cascade ao remover fabricante) e via
+  Playwright no navegador (catalogo carregando do backend, login errado
+  mostra mensagem, login certo libera a aba Adicionar, criar fabricante
+  e acessorio pela interface, editar, remover os dois, e um teste de
+  modo offline: bloqueando so as chamadas pra API via
+  page.route(...).abort() o catalogo continua aparecendo do cache e uma
+  tentativa de login offline falha rapido com mensagem amigavel em vez
+  de travar 6s).
+- ESCOPO.md atualizado: nova secao "Backend" (stack, rotas, como rodar
+  local), "Como publicar o backend" (Neon + Render, mesmo padrao de
+  passo-a-passo de "Como gerar/publicar o APK"), funcionalidades 5-8
+  reescritas pra refletir que o cadastro agora e compartilhado via
+  backend, "Fora do escopo" perdeu o item de login/backend (motivo:
+  virou escopo) e ganhou "tela de administracao de usuarios" (ainda nao
+  existe - trocar permissao e via SQL direto no Neon por enquanto).
+- Falta publicar o backend de verdade (Render) e trocar API_BASE_URL -
+  ver PENDENCIAS abaixo.
+
 ===========================================================================
 PENDENCIAS / PROXIMOS PASSOS
 ===========================================================================
-- Publicar a Release v1.0.1 no GitHub (arrastar
-  ManualDoMontador-v1.0.1.apk, tag v1.0.1) pra validar o aviso de
-  atualizacao de ponta a ponta no celular que ja tem a v1.0.0 instalada.
-- Confirmar que a v1.0.0 realmente foi publicada como Release no GitHub
-  (perguntado ao usuario, resposta ainda pendente).
+- Publicar o backend (Render + Neon ja criado) e trocar API_BASE_URL em
+  prototipo/js/api.js pela URL publicada (ver ESCOPO.md > "Como publicar
+  o backend").
+- Depois disso, gerar um novo APK apontando pra API de producao e
+  publicar como Release no GitHub.
+- Release v1.0.1 publicada no GitHub (tag v1.0.1, APK anexado) em
+  2026-07-12 - aviso de atualizacao validado de ponta a ponta.
 - Adicionar fotos de capa restantes: Corredica Tandem, Trilho telescopico,
   Sistema Quadro.
 - Adicionar fotos de cada passo de instalacao (hoje todas usam o
@@ -560,5 +707,6 @@ PENDENCIAS / PROXIMOS PASSOS
   sao genericos, escritos como exemplo).
 - Validar as telas com o usuario final (montador) antes de decidir a stack
   definitiva para gerar o app de verdade.
-- Definir a lista real de usuarios/senhas com acesso (hoje so tem 1 de
-  exemplo em prototipo/js/auth.js).
+- Definir a lista real de usuarios/senhas e permissao (pode_adicionar) de
+  cada um (hoje so tem o usuario de exemplo "montador"/"1234" no banco) -
+  trocar via SQL direto no Neon ate existir uma tela de administracao.

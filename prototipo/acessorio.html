@@ -16,6 +16,7 @@
   <div class="content" id="conteudo"></div>
 </div>
 
+<script src="js/api.js"></script>
 <script src="js/data.js"></script>
 <script src="js/app.js"></script>
 <script src="js/auth.js"></script>
@@ -23,18 +24,24 @@
 <script src="js/menu.js"></script>
 <script>
 const id = getQueryParam("id");
-const acessorio = getAcessorioPorId(id);
 const conteudo = document.getElementById("conteudo");
 
-if (!acessorio) {
-  conteudo.innerHTML = emptyState("❓", "Acessório não encontrado.");
-  document.getElementById("link-voltar").href = "index.html";
-} else {
+sincronizarCatalogo().then(iniciar);
+
+function iniciar() {
+  const acessorio = getAcessorioPorId(id);
+
+  if (!acessorio) {
+    conteudo.innerHTML = emptyState("❓", "Acessório não encontrado.");
+    document.getElementById("link-voltar").href = "index.html";
+    return;
+  }
+
   const fabricante = getFabricantePorId(acessorio.fabricanteId);
   document.getElementById("link-voltar").href = `fabricante.html?id=${acessorio.fabricanteId}`;
   document.getElementById("titulo-topo").textContent = acessorio.nome;
 
-  const podeGerenciar = estaLogado();
+  const podeGerenciar = podeAdicionar();
 
   conteudo.style.setProperty("--cor", fabricante.cor);
   conteudo.innerHTML = `
@@ -68,10 +75,16 @@ if (!acessorio) {
   `;
 
   if (podeGerenciar) {
-    document.getElementById("btn-remover").addEventListener("click", () => {
-      if (confirm(`Remover "${acessorio.nome}"? Essa ação não pode ser desfeita.`)) {
-        removerAcessorio(acessorio.id);
+    document.getElementById("btn-remover").addEventListener("click", async () => {
+      if (!confirm(`Remover "${acessorio.nome}"? Essa ação não pode ser desfeita.`)) return;
+      const btn = document.getElementById("btn-remover");
+      btn.disabled = true;
+      try {
+        await removerAcessorio(acessorio.id);
         window.location.href = `fabricante.html?id=${acessorio.fabricanteId}`;
+      } catch (e) {
+        alert(e.message);
+        btn.disabled = false;
       }
     });
   }

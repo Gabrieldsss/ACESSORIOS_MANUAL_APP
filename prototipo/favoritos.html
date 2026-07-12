@@ -20,11 +20,12 @@
 
   <div class="tabbar">
     <a href="index.html"><span class="icon">🏠</span>Início</a>
-    <a href="adicionar.html"><span class="icon">➕</span>Adicionar</a>
+    <a href="adicionar.html" id="tab-adicionar"><span class="icon">➕</span>Adicionar</a>
     <a href="login.html"><span class="icon">👤</span>Conta</a>
   </div>
 </div>
 
+<script src="js/api.js"></script>
 <script src="js/data.js"></script>
 <script src="js/app.js"></script>
 <script src="js/auth.js"></script>
@@ -52,7 +53,7 @@ function render() {
 }
 
 document.addEventListener("favoritos:mudou", render);
-render();
+sincronizarCatalogo().then(render);
 </script>
 </body>
 </html>

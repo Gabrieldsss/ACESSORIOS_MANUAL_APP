@@ -22,29 +22,29 @@ instalar cada peça.
 4. **Passo a passo de instalação** — 1 imagem + 1 texto por tela, navegação
    anterior/próximo, indicador "Passo X de Y".
 5. **Cadastro de acessório próprio** — escolhe o fabricante, nome, categoria,
-   foto do produto, e N passos de instalação (cada um com foto + texto),
-   salvos localmente (upload real de foto, sem precisar editar arquivos).
+   foto do produto, e N passos de instalação (cada um com foto + texto).
+   Vai direto pro backend (ver seção "Backend" abaixo) e passa a aparecer
+   pra **todo mundo** que usa o app, não só em quem cadastrou.
 6. **Cadastro de fabricante próprio** — na mesma tela "Adicionar", alternando
    para a aba "Fabricante": nome, cor de destaque e logo (upload, opcional).
    O fabricante criado passa a aparecer na lista de fabricantes e no seletor
-   de fabricante do cadastro de acessório.
-7. **Login restrito para quem cadastra** — tela "Conta" (aba 👤) com
-   usuário/senha fixos no código (ver `prototipo/js/auth.js`). Só quem
-   estiver logado consegue abrir a tela "Adicionar" (fabricante ou
-   acessório); quem só quer consultar os fabricantes e os manuais não
-   precisa entrar. É um login **só de protótipo** (sem servidor): as senhas
-   ficam no JavaScript, então não deve ser tratado como controle de acesso
-   seguro de verdade — isso só existirá quando o app tiver backend (ver
-   "Próximos passos").
+   de fabricante do cadastro de acessório (pra todo mundo, via backend).
+7. **Login restrito para quem cadastra, com permissão por usuário** — tela
+   "Conta" (aba 👤) fala com o backend (`POST /auth/login`), que confere a
+   senha com hash e devolve um token; cada usuário tem um campo
+   `pode_adicionar` no banco. A aba "Adicionar" da barra inferior e o botão
+   flutuante "+" só aparecem para quem está logado **e** tem permissão;
+   quem só quer consultar os fabricantes e os manuais não precisa entrar
+   nem de internet (usa o catálogo em cache). Ver "Backend" abaixo — antes
+   disso o login era só de protótipo (senha visível no JS); agora é de
+   verdade.
 8. **Editar e remover qualquer fabricante/acessório** — botões "Editar" e
    "Remover" na tela de detalhe do acessório e na tela do fabricante,
-   visíveis para **qualquer** item (inclusive o catálogo fixo e os 3
-   fabricantes fixos), mas só aparecem para quem está logado. Editar
-   reaproveita a tela "Adicionar" pré-preenchida; remover pede confirmação
-   antes de apagar, e remover um fabricante também remove os acessórios
-   cadastrados nele. Como o catálogo fixo é código (não um cadastro de
-   verdade), editar/remover um item fixo salva a alteração/remoção "por
-   cima" no localStorage — ver `prototipo/js/data.js`.
+   visíveis para **qualquer** item (inclusive o catálogo original), mas só
+   aparecem para quem tem permissão. Editar reaproveita a tela "Adicionar"
+   pré-preenchida; remover pede confirmação antes de apagar, e remover um
+   fabricante também remove os acessórios cadastrados nele (o backend faz
+   isso em cascata no banco).
 9. **Menu lateral** — ícone ☰ no topo de toda tela, abre um painel deslizante
    (por cima da própria tela, não precisa sair dela) com o link para
    "Favoritos" e a versão do app. Não duplica a navegação da barra inferior
@@ -87,21 +87,56 @@ automaticamente — sem precisar mexer no código. Ver
 Os acessórios cadastrados pelo próprio usuário usam upload direto (funciona
 na hora, sem precisar editar pastas).
 
+## Backend
+A partir de 2026-07-12 o catálogo (fabricantes, acessórios e passos) e o
+login deixaram de viver só no aparelho e passaram a ter um backend de
+verdade — ver a pasta `backend/` na raiz do projeto.
+
+- **Stack**: Node.js + Express, banco Postgres na nuvem ([Neon](https://neon.tech),
+  free tier), login com senha em hash (`bcryptjs`) + sessão via token JWT
+  (`jsonwebtoken`). Sem ORM — SQL direto (`pg`), schema pequeno (4 tabelas,
+  ver `backend/schema.sql`).
+- **Rotas**: `POST /auth/login` (público), `GET /catalogo` (público — é o
+  que o app consulta), `POST/PUT/DELETE /fabricantes[/:id]` e
+  `POST/PUT/DELETE /acessorios[/:id]` (exigem token **e** `pode_adicionar`).
+- **Offline continua funcionando pra consulta**: toda vez que uma tela abre,
+  o app tenta buscar `GET /catalogo` e guarda o resultado em
+  `localStorage.catalogoCache` (`prototipo/js/data.js` →
+  `sincronizarCatalogo()`); se não tiver internet, a busca falha rápido (6s
+  de timeout) e a tela usa o que já tem em cache, sem travar. **Só
+  adicionar/editar/remover exige internet de verdade** — sem escrita local
+  "otimista", porque a fonte da verdade agora é o banco.
+- **Favoritos continuam 100% locais** (`localStorage`, nunca vão pro
+  backend) — são preferência do aparelho, não dado administrativo.
+- **Imagens**: o catálogo original (3 fabricantes + 6 acessórios) continua
+  usando os arquivos em `prototipo/assets/` (colunas `logo`/`imagem` no
+  banco, mesmo esquema de slot-com-fallback de sempre); o que é cadastrado
+  pelo próprio usuário continua indo direto como base64 (colunas
+  `logo_base64`/`imagem_base64`), sem precisar de um serviço de storage de
+  arquivo separado.
+- **Rodar localmente**: `cd backend && npm install`, copiar
+  `.env.example` pra `.env` e preencher `DATABASE_URL` (connection string
+  do Neon) e `JWT_SECRET`, `npm run seed` (popula o catálogo original + o
+  usuário `montador`/`1234`) e `npm start`. `prototipo/js/api.js` tem a
+  constante `API_BASE_URL` apontando pro backend (`http://localhost:3000`
+  em dev — trocar pela URL publicada quando o backend for hospedado, ver
+  "Como publicar o backend" abaixo).
+
 ## Fora do escopo (v1)
-- Login com backend / senhas com hash / sincronização em nuvem (o login
-  atual é só um controle de acesso de protótipo, ver item 7 acima).
 - Publicação em loja (Play Store) — distribuição é por APK direto (ver
   item 11 e "Como gerar/publicar uma atualização" abaixo).
+- Tela de administração pra gerenciar usuários/permissões (hoje é direto
+  no banco — ver "Backend" acima e "Próximos passos").
 - Orçamento, agenda ou gestão de clientes.
 
 ## Telas
 | Tela | Descrição |
 |---|---|
 | Início | Lista de fabricantes — os 3 fixos + os cadastrados pelo usuário (logo + nome + qtd. de acessórios) |
-| Fabricante | Lista de acessórios do fabricante (catálogo + meus), busca, botão "+ adicionar" |
+| Fabricante | Lista única de acessórios do fabricante (catálogo + meus, cada item com selo "Catálogo"/"Meu"), busca, botão "+ adicionar" (só visível com permissão) |
 | Detalhe do acessório | Foto, fabricante, categoria, resumo dos passos, botão "Ver instalação" |
 | Passo a passo | Imagem grande + texto do passo, navegação, progresso |
-| Adicionar / Editar | Alterna entre aba "Acessório" (fabricante, dados + passos dinâmicos foto+texto) e aba "Fabricante" (nome, cor, logo). Mesma tela é reaproveitada, pré-preenchida, quando vem de "Editar". Exige login. |
+| Adicionar / Editar | Alterna entre aba "Acessório" (fabricante, dados + passos dinâmicos foto+texto) e aba "Fabricante" (nome, cor, logo). Mesma tela é reaproveitada, pré-preenchida, quando vem de "Editar". Exige login **com permissão** (`podeAdicionar`); a aba "Adicionar" da barra inferior e o botão "+" só aparecem pra quem tem essa permissão. |
 | Conta (login) | Login com usuário/senha, ou dados da conta logada + botão "Sair" |
 | Favoritos | Lista de todos os acessórios marcados como favoritos, de qualquer fabricante |
 | Menu lateral (☰) | Painel deslizante com link para Favoritos e a versão do app |
@@ -138,20 +173,39 @@ preenche nome/cor/logo → salva → volta para a tela do novo fabricante.
    aviso de atualização sozinho — não precisa reinstalar manualmente
    nem mandar o APK por fora.
 
+## Como publicar o backend
+1. Criar uma conta gratuita em [neon.tech](https://neon.tech) (se ainda
+   não tiver) e um projeto Postgres; copiar a connection string.
+2. Criar uma conta gratuita em [render.com](https://render.com), "New +"
+   → "Web Service", apontando pro repositório do GitHub, pasta raiz
+   `backend/`. Comando de build `npm install`, comando de start
+   `npm start`.
+3. Nas variáveis de ambiente do serviço no Render, adicionar
+   `DATABASE_URL` (a connection string do Neon) e `JWT_SECRET` (um valor
+   aleatório longo — igual ao `backend/.env` local, mas gerar um novo pra
+   produção).
+4. Depois do primeiro deploy, rodar `npm run seed` uma vez (Render tem uma
+   aba "Shell" no serviço) pra popular o catálogo original e o usuário
+   `montador`/`1234`.
+5. Copiar a URL pública que o Render dá pro serviço (ex:
+   `https://manual-do-montador-api.onrender.com`) e colar em
+   `API_BASE_URL`, no topo de `prototipo/js/api.js`, no lugar de
+   `http://localhost:3000`.
+6. Gerar um novo APK (ver "Como gerar/publicar uma atualização do APK"
+   acima) e publicar a release — a partir daí o app fala com a API de
+   verdade, não mais com o localhost de desenvolvimento.
+
 ## Próximos passos
-- Criar o repositório no GitHub e trocar o placeholder `REPO` em
-  `prototipo/js/atualizacao.js` pelo repositório real.
-- Gerar e testar um APK de release assinado (o de teste gerado até agora
-  é "debug", que serve pra instalar/testar mas não é o formato normal
-  pra distribuir pros montadores).
-- Publicar a primeira release no GitHub e validar o fluxo de aviso de
-  atualização de ponta a ponta, num celular Android de verdade.
+- Publicar o backend (Render + Neon, ver seção acima) e trocar
+  `API_BASE_URL` em `prototipo/js/api.js` pela URL publicada.
+- Depois de publicado, gerar um novo APK apontando pra API de produção e
+  publicar como Release no GitHub.
+- Definir a lista real de pessoas com acesso e a permissão
+  (`pode_adicionar`) de cada uma — hoje só existe o usuário de exemplo
+  `montador`/`1234` (senha com hash no banco, mas ainda a senha de
+  exemplo). Trocar via SQL direto no Neon (não tem tela de administração
+  ainda, ver "Fora do escopo").
 - Substituir os slots de imagem pelos arquivos reais (logos e fotos de
   produto), conforme `prototipo/assets/README.md`.
 - Revisar/reescrever os textos de instalação dos itens de catálogo.
 - Validar telas com o usuário final (montador).
-- Definir a lista real de pessoas com acesso a editar/adicionar/remover
-  (hoje só tem 1 usuário de exemplo em `prototipo/js/auth.js`) — o login
-  atual continua sendo só de protótipo (senha visível no código); se
-  isso virar um problema real de segurança, será preciso um backend de
-  verdade (fora do escopo atual).

@@ -16,18 +16,25 @@
   <div class="content" id="conteudo"></div>
 </div>
 
+<script src="js/api.js"></script>
 <script src="js/data.js"></script>
 <script src="js/app.js"></script>
 <script src="js/versao.js"></script>
 <script src="js/menu.js"></script>
 <script>
 const id = getQueryParam("id");
-const acessorio = getAcessorioPorId(id);
-const fabricante = acessorio ? getFabricantePorId(acessorio.fabricanteId) : null;
+let acessorio = null;
+let fabricante = null;
 let step = parseInt(getQueryParam("step") || "0", 10);
 const conteudo = document.getElementById("conteudo");
 
 document.getElementById("link-voltar").href = `acessorio.html?id=${id}`;
+
+sincronizarCatalogo().then(() => {
+  acessorio = getAcessorioPorId(id);
+  fabricante = acessorio ? getFabricantePorId(acessorio.fabricanteId) : null;
+  render();
+});
 
 function render() {
   if (!acessorio) {
@@ -74,8 +81,6 @@ document.addEventListener("keydown", (e) => {
     }
   }
 });
-
-render();
 </script>
 </body>
 </html>
