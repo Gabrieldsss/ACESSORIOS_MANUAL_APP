@@ -11,6 +11,12 @@ android/captures/
 *.apk
 *.aab
 
+# Chave de assinatura do app - NUNCA versionar (guardar em local seguro,
+# fora do repositorio, tipo gerenciador de senhas)
+**/keystore.properties
+**/*.keystore
+**/*.jks
+
 # Sistema
 .DS_Store
 Thumbs.db
