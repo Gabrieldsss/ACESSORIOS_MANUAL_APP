@@ -475,20 +475,43 @@ HISTORICO DE ALTERACOES
   versao, ex: v1.1.0) - o app dos montadores detecta sozinho na proxima
   vez que abrir com internet.
 
+[2026-07-12] Layout responsivo - tela cheia de verdade no celular
+- Usuario notou que o app usava uma "moldura de celular" com largura FIXA
+  (390px, com borda preta e cantos arredondados simulando um celular) -
+  isso fazia sentido só pra visualizar no navegador do computador durante
+  o protototipo, mas quebraria feio num celular de verdade (apareceria
+  pequeno, sobrando cinza ao redor, com a moldura falsa por cima da tela
+  real do aparelho).
+- prototipo/css/style.css: adicionada media query (@media max-width:
+  480px, que cobre praticamente qualquer celular em pé) fazendo a
+  ".phone" virar tela cheia de verdade nesse caso - sem borda, sem cantos
+  arredondados, sem sombra, ocupando 100% da largura e altura do
+  aparelho. Acima de 480px de largura (navegador de computador), continua
+  mostrando a moldura de celular normalmente, pra manter bom pra
+  visualizar/testar no PC.
+- Corrigido um bug que só ia aparecer nesse modo tela-cheia: o botao "+"
+  flutuante (FAB) usava uma conta fixa (calc) que so posicionava certo
+  quando a ".phone" tinha exatamente 390px de largura centralizada -
+  agora ele e posicionado relativo a propria ".phone" (que ja tem
+  position:relative), entao funciona em qualquer tamanho de tela.
+- Adicionado respeito a "areas seguras" do aparelho (env(safe-area-inset-*)):
+  espaco extra no topo (por baixo da barra de status/notch) e embaixo
+  (por cima da barra de gestos), sem efeito nenhum em telas sem essas
+  areas (valor vira 0 automaticamente).
+- Nao gerou/publicou uma release nova ainda - essa correcao fica pronta
+  pra entrar na proxima versao publicada (subir numero em versao.js,
+  gerar o APK de release, publicar no GitHub, como documentado no
+  ESCOPO.md).
+
 ===========================================================================
 PENDENCIAS / PROXIMOS PASSOS
 ===========================================================================
-- Criar o repositorio no GitHub (usuario ja tem conta) e trocar o
-  placeholder REPO em prototipo/js/atualizacao.js pelo "usuario/repo"
-  real.
-- Gerar e testar um APK de RELEASE assinado (o de teste gerado agora e
-  "debug", que serve pra instalar e testar mas normalmente nao e o que
-  se distribui pros montadores - falta configurar assinatura pra build
-  de release).
-- Publicar a primeira release no GitHub (com o APK anexado) pra validar
-  o fluxo de aviso de atualizacao de ponta a ponta.
+- Publicar uma release nova no GitHub (v1.0.1 ou o numero que fizer
+  sentido) incluindo a correcao de layout responsivo - a v1.0.0 ja
+  publicada ainda tem a moldura fixa.
 - Testar a instalacao em um celular Android de verdade (ainda so foi
-  testado que o build compila, nao que o app abre/funciona no aparelho).
+  testado que o build compila e que a v1.0.0 esta assinada corretamente,
+  nao que o app abre/funciona/preenche a tela no aparelho real).
 - Adicionar fotos de capa restantes: Corredica Tandem, Trilho telescopico,
   Sistema Quadro.
 - Adicionar fotos de cada passo de instalacao (hoje todas usam o

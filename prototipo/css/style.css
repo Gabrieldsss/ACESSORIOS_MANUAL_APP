@@ -27,8 +27,25 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* Em telas de celular de verdade (o app instalado, ou o navegador do
+   celular), a "moldura de celular" (pensada só pra visualizar no
+   computador durante o protótipo) vira a tela cheia de verdade, sem
+   borda/cantos arredondados/sombra, ocupando 100% do aparelho. */
+@media (max-width: 480px) {
+  body { padding: 0; background: #f7f8fa; }
+  .phone {
+    width: 100%;
+    max-width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+
 .topbar {
-  padding: 18px 20px 12px;
+  padding: calc(18px + env(safe-area-inset-top)) 20px 12px;
   background: #2f6b4f;
   color: #fff;
   display: flex;
@@ -153,9 +170,9 @@ body {
 }
 
 .fab {
-  position: fixed;
+  position: absolute;
   bottom: 90px;
-  right: calc(50% - 195px + 20px);
+  right: 20px;
   width: 52px;
   height: 52px;
   border-radius: 50%;
@@ -173,6 +190,7 @@ body {
   display: flex;
   border-top: 1px solid #e5e7eb;
   background: #fff;
+  padding-bottom: env(safe-area-inset-bottom);
 }
 .tabbar a {
   flex: 1;
