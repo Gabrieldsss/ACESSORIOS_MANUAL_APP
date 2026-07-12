@@ -174,6 +174,12 @@ preenche nome/cor/logo → salva → volta para a tela do novo fabricante.
    nem mandar o APK por fora.
 
 ## Como publicar o backend
+Já feito em 2026-07-12: backend publicado no Render em
+`https://acessorios-manual-app.onrender.com` (banco Neon), `API_BASE_URL`
+em `prototipo/js/api.js` já aponta pra lá, e a v1.1.0 do APK (gerada com
+essa URL) já foi publicada como Release no GitHub. Os passos abaixo ficam
+registrados pra quando for preciso recriar/trocar de serviço:
+
 1. Criar uma conta gratuita em [neon.tech](https://neon.tech) (se ainda
    não tiver) e um projeto Postgres; copiar a connection string.
 2. Criar uma conta gratuita em [render.com](https://render.com), "New +"
@@ -184,22 +190,19 @@ preenche nome/cor/logo → salva → volta para a tela do novo fabricante.
    `DATABASE_URL` (a connection string do Neon) e `JWT_SECRET` (um valor
    aleatório longo — igual ao `backend/.env` local, mas gerar um novo pra
    produção).
-4. Depois do primeiro deploy, rodar `npm run seed` uma vez (Render tem uma
-   aba "Shell" no serviço) pra popular o catálogo original e o usuário
-   `montador`/`1234`.
+4. Depois do primeiro deploy, popular o catálogo original + usuário
+   `montador`/`1234`: se o plano do Render tiver a aba "Shell", rodar
+   `npm run seed` por lá; no plano free (sem Shell), rodar
+   `npm run seed` numa máquina local com a `DATABASE_URL` do Neon no
+   `backend/.env` — é o mesmo banco, então funciona igual.
 5. Copiar a URL pública que o Render dá pro serviço (ex:
-   `https://manual-do-montador-api.onrender.com`) e colar em
-   `API_BASE_URL`, no topo de `prototipo/js/api.js`, no lugar de
-   `http://localhost:3000`.
+   `https://nome-do-servico.onrender.com`) e colar em `API_BASE_URL`, no
+   topo de `prototipo/js/api.js`, no lugar da URL antiga.
 6. Gerar um novo APK (ver "Como gerar/publicar uma atualização do APK"
    acima) e publicar a release — a partir daí o app fala com a API de
-   verdade, não mais com o localhost de desenvolvimento.
+   verdade.
 
 ## Próximos passos
-- Publicar o backend (Render + Neon, ver seção acima) e trocar
-  `API_BASE_URL` em `prototipo/js/api.js` pela URL publicada.
-- Depois de publicado, gerar um novo APK apontando pra API de produção e
-  publicar como Release no GitHub.
 - Definir a lista real de pessoas com acesso e a permissão
   (`pode_adicionar`) de cada uma — hoje só existe o usuário de exemplo
   `montador`/`1234` (senha com hash no banco, mas ainda a senha de

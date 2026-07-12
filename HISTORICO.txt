@@ -692,11 +692,19 @@ HISTORICO DE ALTERACOES
 ===========================================================================
 PENDENCIAS / PROXIMOS PASSOS
 ===========================================================================
-- Publicar o backend (Render + Neon ja criado) e trocar API_BASE_URL em
-  prototipo/js/api.js pela URL publicada (ver ESCOPO.md > "Como publicar
-  o backend").
-- Depois disso, gerar um novo APK apontando pra API de producao e
-  publicar como Release no GitHub.
+- Backend publicado no Render (https://acessorios-manual-app.onrender.com,
+  banco Neon) em 2026-07-12. Root Directory precisou ser "backend"
+  (deploy falhou antes disso com "Missing script: start", porque rodava
+  na raiz do repo, onde o package.json e o do Capacitor). Plano free do
+  Render nao tem aba "Shell" (e paga) - o seed foi rodado local com a
+  mesma DATABASE_URL do Neon, entao nao precisou. Confirmado com curl:
+  GET /catalogo e POST /auth/login respondendo certo em producao.
+- Release v1.1.0 publicada no GitHub (tag v1.1.0, APK anexado) em
+  2026-07-12 - API_BASE_URL do app agora aponta pro Render (nao mais
+  localhost); versionCode 3, versionName "1.1.0" em
+  android/app/build.gradle; VERSAO_APP "1.1.0" em prototipo/js/versao.js.
+  Testado com Playwright apontando pra API real antes de gerar o APK
+  (catalogo carrega, login funciona, zero erro de console/CORS).
 - Release v1.0.1 publicada no GitHub (tag v1.0.1, APK anexado) em
   2026-07-12 - aviso de atualizacao validado de ponta a ponta.
 - Adicionar fotos de capa restantes: Corredica Tandem, Trilho telescopico,
