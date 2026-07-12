@@ -1,7 +1,6 @@
-// Fala com o backend (ver pasta backend/ na raiz do projeto). Troque
-// API_BASE_URL pela URL publicada quando o backend for hospedado (ver
-// ESCOPO.md > "Como publicar o backend").
-const API_BASE_URL = "http://localhost:3000";
+// Fala com o backend (ver pasta backend/ na raiz do projeto), publicado
+// no Render (ver ESCOPO.md > "Como publicar o backend").
+const API_BASE_URL = "https://acessorios-manual-app.onrender.com";
 
 // Erro específico de "não deu pra falar com o servidor" (sem internet,
 // servidor fora do ar, etc.) - quem chama pode diferenciar isso de um
