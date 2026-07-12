@@ -503,15 +503,55 @@ HISTORICO DE ALTERACOES
   gerar o APK de release, publicar no GitHub, como documentado no
   ESCOPO.md).
 
+[2026-07-12] v1.0.0 instalada e rodando num celular de verdade
+- Usuario confirmou que ja instalou a v1.0.0 num celular Android e o app
+  esta rodando. Explicado como o aviso de atualizacao funciona na
+  pratica: só aparece quando (1) existir uma Release nova no GitHub com
+  versao maior que a instalada E com o APK anexado, e (2) o celular tiver
+  internet no momento de abrir a tela Inicio.
+
+[2026-07-12] Projeto movido pra fora do OneDrive (corrige builds falhando)
+- Os builds Android (assembleDebug/assembleRelease) vinham falhando
+  direto com erro "Unable to delete directory" em pastas dentro de
+  android/*/build. Causa: o projeto ficava dentro de uma pasta
+  sincronizada pelo OneDrive, que trava arquivos brevemente enquanto
+  sincroniza - e o Gradle cria/apaga MUITOS arquivos pequenos durante o
+  build.
+- A pedido do usuario, o projeto inteiro foi movido de
+  "OneDrive\Documentos\Desktop\PASTA_PESSOAL\TESTEAPP" pra
+  "C:\Projetos\TESTEAPP" (fora de qualquer pasta sincronizada). Git,
+  keystore de assinatura, node_modules, tudo preservado - só o caminho no
+  disco mudou. O historico do git (commits, tags, remoto configurado)
+  continua intacto.
+- Mesmo fora do OneDrive, o mesmo tipo de erro ainda acontecia (mais
+  raro) - identificadas mais duas causas, ambas sem relacao com OneDrive:
+    1. O recurso de "observador de arquivos" (file-system watch) do
+       proprio Gradle, que no Windows pode manter um arquivo aberto por
+       baixo dos panos e entrar em conflito com o proprio Gradle tentando
+       apagar essa mesma pasta. Corrigido adicionando
+       "org.gradle.vfs.watch=false" em android/gradle.properties.
+    2. O "daemon" do Gradle (processo que fica rodando em segundo plano
+       entre builds pra ser mais rapido) as vezes mantinha handles de
+       arquivo presos entre uma tentativa e outra. Resolvido rodando o
+       build com a flag "--no-daemon" (cada build roda num processo
+       novo, que fecha certinho no final).
+- Com as duas correcoes, o build de release passou a funcionar de forma
+  confiavel. Gerado e assinado o APK da v1.0.1 (mesma assinatura/keystore
+  da v1.0.0 - instala como atualizacao normal, sem precisar desinstalar):
+  ManualDoMontador-v1.0.1.apk. versionCode 2, versionName "1.0.1" em
+  android/app/build.gradle; VERSAO_APP "1.0.1" em prototipo/js/versao.js.
+- Se builds futuros voltarem a falhar com "Unable to delete directory",
+  o jeito de resolver e: parar o daemon (gradlew --stop), apagar a pasta
+  "build" travada manualmente, e rodar de novo com --no-daemon.
+
 ===========================================================================
 PENDENCIAS / PROXIMOS PASSOS
 ===========================================================================
-- Publicar uma release nova no GitHub (v1.0.1 ou o numero que fizer
-  sentido) incluindo a correcao de layout responsivo - a v1.0.0 ja
-  publicada ainda tem a moldura fixa.
-- Testar a instalacao em um celular Android de verdade (ainda so foi
-  testado que o build compila e que a v1.0.0 esta assinada corretamente,
-  nao que o app abre/funciona/preenche a tela no aparelho real).
+- Publicar a Release v1.0.1 no GitHub (arrastar
+  ManualDoMontador-v1.0.1.apk, tag v1.0.1) pra validar o aviso de
+  atualizacao de ponta a ponta no celular que ja tem a v1.0.0 instalada.
+- Confirmar que a v1.0.0 realmente foi publicada como Release no GitHub
+  (perguntado ao usuario, resposta ainda pendente).
 - Adicionar fotos de capa restantes: Corredica Tandem, Trilho telescopico,
   Sistema Quadro.
 - Adicionar fotos de cada passo de instalacao (hoje todas usam o

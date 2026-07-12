@@ -121,12 +121,20 @@ preenche nome/cor/logo → salva → volta para a tela do novo fabricante.
 
 ## Como gerar/publicar uma atualização do APK
 1. Mudar o que for preciso em `prototipo/` (o código-fonte de verdade).
-2. Subir o número em `prototipo/js/versao.js` (ex: `"1.0.0"` → `"1.1.0"`).
+2. Subir o número em `prototipo/js/versao.js` (ex: `"1.0.0"` → `"1.1.0"`)
+   **e** em `android/app/build.gradle` (`versionCode` +1, `versionName`
+   igual ao de versao.js) — os dois precisam mudar juntos.
 3. `npx cap sync android` (copia os arquivos novos pro projeto Android).
-4. Gerar o APK (`assembleDebug` pra testar; `assembleRelease` assinado
-   pra distribuir de verdade) e publicar como uma "Release" nova no
-   GitHub, com uma tag igual à versão (ex: `v1.1.0`) e o APK anexado.
-5. Da próxima vez que um montador abrir o app com internet, ele vê o
+4. Gerar o APK: dentro de `android/`, rodar
+   `.\gradlew.bat assembleRelease --no-daemon` (o `--no-daemon` evita um
+   problema conhecido no Windows de "Unable to delete directory" durante
+   o build — ver HISTORICO.txt de 2026-07-12). Use `assembleDebug` só
+   pra testar rápido; `assembleRelease` é o assinado, pra distribuir de
+   verdade.
+5. Publicar como uma "Release" nova no GitHub, com uma tag igual à versão
+   (ex: `v1.1.0`) e o APK (`android/app/build/outputs/apk/release/app-release.apk`)
+   anexado.
+6. Da próxima vez que um montador abrir o app com internet, ele vê o
    aviso de atualização sozinho — não precisa reinstalar manualmente
    nem mandar o APK por fora.
 
