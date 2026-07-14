@@ -941,23 +941,75 @@ HISTORICO DE ALTERACOES
   16 (compartilhar), secao Backend com as rotas novas e o aviso sobre
   armazenamento de video no Neon, tabela de Telas e Proximos passos
   atualizados.
-- Nada disso foi comitado ainda.
+
+[2026-07-14] v1.2.0 comitada, backend republicado, APK gerado e Release publicada
+- Usuario pediu "crie a atualizacao": comitado tudo das rodadas de
+  2026-07-13/14 (tablet, busca global, catalogo em 1o lugar, ajuda,
+  bugfix do apiGet, catalogo de eletrodomesticos, avaliacao/video/
+  compartilhar) num commit so, com push pro GitHub (branch main).
+- Render redeployou sozinho a partir do push (auto-deploy ja estava
+  configurado desde a publicacao inicial em 2026-07-12) - confirmado com
+  curl que GET /catalogo ja tinha os campos novos (avaliacoesUtil) e que
+  GET /manual/:id e GET /assets/... (rotas novas) respondiam 200 em
+  producao, minutos depois do push.
+- Versao subida pra 1.2.0 (versionCode 5) em android/app/build.gradle e
+  prototipo/js/versao.js - o pulo de 1.1.1 pra 1.2.0 (em vez de um patch)
+  foi por causa do tamanho da rodada (catalogo novo inteiro +
+  video/avaliacao/compartilhar, nao só correcoes).
+- APK gerado com "npx cap sync android" + "gradlew assembleRelease
+  --no-daemon" (mesmo processo documentado antes, sem precisar repetir os
+  workarounds de OneDrive/vfs.watch - ja estavam aplicados). Renomeado pra
+  ManualDoMontador-v1.2.0.apk.
+- gh CLI continua nao instalado nessa maquina - Release publicada
+  manualmente pelo site do GitHub (mesmo processo guiado da v1.1.0),
+  tag v1.2.0, APK anexado.
+
+[2026-07-14] Catalogo de eletrodomesticos populado com pesquisa real
+- Usuario pediu pra pesquisar eletrodomesticos de embutir (forno, fogao,
+  geladeira e outros) de marcas conhecidas, com manual de instalacao em
+  armario, e organizar numa pasta pra colocar no app.
+- Pesquisado via WebSearch/WebFetch: manuais oficiais e paginas de suporte
+  da Electrolux, Fischer, Brastemp, Continental, Tramontina (PDFs oficiais
+  em si vieram como imagem/binario, sem texto extraivel - as medidas
+  usadas vieram das paginas de busca e de uma tabela comparativa de
+  nichos por marca/modelo: portaldoeletrodomestico.com.br).
+- Criada a pasta eletrodomesticos-pesquisa/ (raiz do projeto, FORA de
+  prototipo/ - nao entra no APK) com 1 JSON por fabricante (formato
+  compativel com POST /fabricantes e /acessorios) + README.md explicando
+  o formato e dois avisos que ficaram nos proprios passos cadastrados:
+  (1) medida de corte/nicho varia por modelo mesmo dentro da mesma marca,
+  os passos pedem pra conferir o gabarito oficial antes de cortar; (2)
+  ligacao de gas no Brasil exige instalador credenciado (NBR 13103) - o
+  papel do montador e preparar/fixar o nicho, nao ligar o gas.
+- Perguntado ao usuario se eu ja cadastrava direto em producao ou se ele
+  quereria revisar antes - escolheu revisar primeiro. Depois de revisar,
+  pediu "cadastre no catalogo".
+- Importado via script Node (login como montador, POST /fabricantes +
+  POST /acessorios pra cada item) direto na API de producao: 4
+  fabricantes (Brastemp, Electrolux, Fischer, Continental) e 10 aparelhos
+  (fogao/cooktop de embutir, forno de embutir, micro-ondas de embutir,
+  lava-loucas de embutir, coifa de parede, geladeira de coluna embutida),
+  todos so com texto (sem fotos ainda). Confirmado via GET /catalogo que
+  os 3 fabricantes de ferragem originais (blum/hettich/hafele) continuam
+  intactos.
+- ESCOPO.md atualizado: item 13 nao fala mais em catalogo vazio, nova
+  secao "Catalogo de eletrodomesticos" documentando os 4 fabricantes/10
+  aparelhos e as duas ressalvas, Proximos passos ganhou "adicionar fotos"
+  e "revisar os textos com alguem da area antes de divulgar" (textos
+  foram compilados de fontes publicas, nunca testados na pratica).
 
 ===========================================================================
 PENDENCIAS / PROXIMOS PASSOS
 ===========================================================================
-- Comitar/enviar tudo das rodadas de 2026-07-13/14 (tablet, busca,
-  catalogo em 1o lugar, ajuda, bugfix do apiGet, catalogo de
-  eletrodomesticos, avaliacao/video/compartilhar) e re-publicar o backend
-  no Render (o Render ainda esta com o server.js de antes de 2026-07-12 -
-  so falta o deploy do codigo novo).
+- Adicionar fotos (produto e passos) aos 10 aparelhos de eletrodomestico
+  cadastrados em 2026-07-14 - hoje so tem texto.
+- Revisar com alguem da area os textos de instalacao de eletrodomestico
+  antes de divulgar pros montadores (compilados de manuais/paginas
+  publicas dos fabricantes via pesquisa, nunca testados na pratica -
+  ver eletrodomesticos-pesquisa/README.md pras fontes usadas).
 - Acompanhar o uso de armazenamento do Neon (free tier) depois que
   videos de passo comecarem a ser cadastrados de verdade - se ficar
   apertado, migrar pra um servico de storage de video dedicado.
-- Gerar um novo APK com tudo isso (o ManualDoMontador-v1.1.1.apk gerado
-  antes so tinha a correcao de tablet - ficou pra tras, nao foi publicado
-  como Release ainda porque o usuario pediu pra continuar reformulando
-  antes de fechar a versao) e publicar como Release nova no GitHub.
 - Backend publicado no Render (https://acessorios-manual-app.onrender.com,
   banco Neon) em 2026-07-12. Root Directory precisou ser "backend"
   (deploy falhou antes disso com "Missing script: start", porque rodava

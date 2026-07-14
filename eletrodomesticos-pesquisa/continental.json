@@ -1,0 +1,18 @@
+{
+  "fabricante": { "nome": "Continental", "cor": "#1c3f94", "tipo": "eletrodomestico" },
+  "aparelhos": [
+    {
+      "nome": "Fogão de Embutir Evidenza 5 Bocas",
+      "categoria": "Fogão de embutir",
+      "fonte": "https://www.portaldoeletrodomestico.com.br/tabela_dimensao_embutir.htm",
+      "passos": [
+        { "texto": "Confira as medidas do nicho antes de montar o móvel: como referência, o Evidenza 5 Bocas usa um vão de aprox. 77,2cm de largura x 65cm de altura x 52cm de profundidade — confirme no manual do modelo, pois revisões podem mudar a medida." },
+        { "texto": "A ligação de gás é feita por instalador credenciado (NBR 13103) — o montador deixa o nicho pronto, nivelado e com o vão de gás acessível, mas não faz a conexão." },
+        { "texto": "Deixe folga de ventilação nas laterais e no fundo do nicho, sem vedar totalmente atrás do fogão." },
+        { "texto": "Posicione o fogão no nicho, confira o nivelamento com um nível de bolha e ajuste os pés niveladores se houver." },
+        { "texto": "Fixe o fogão ao móvel com os suportes/parafusos indicados no manual do produto." },
+        { "texto": "Depois da ligação de gás pelo instalador credenciado, teste o acendimento de todas as bocas e do forno antes de liberar o uso." }
+      ]
+    }
+  ]
+}

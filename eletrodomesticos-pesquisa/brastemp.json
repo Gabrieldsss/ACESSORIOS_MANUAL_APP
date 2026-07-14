@@ -1,0 +1,70 @@
+{
+  "fabricante": { "nome": "Brastemp", "cor": "#e2001a", "tipo": "eletrodomestico" },
+  "aparelhos": [
+    {
+      "nome": "Fogão de Embutir Clean 5 Bocas (BY575AR)",
+      "categoria": "Fogão de embutir",
+      "fonte": "https://www.portaldoeletrodomestico.com.br/tabela_dimensao_embutir.htm",
+      "passos": [
+        { "texto": "Confirme as medidas do nicho antes de montar o móvel: para o Clean 5 Bocas (BY575AR) o vão deve ter aprox. 78cm de largura x 70,3cm de altura x 56,2cm de profundidade. Medidas podem mudar entre revisões do modelo — confira sempre no manual que acompanha o aparelho antes de fechar a marcenaria." },
+        { "texto": "Ligação de gás: essa etapa é de responsabilidade de instalador credenciado (norma NBR 13103) — o montador de móveis deve deixar o nicho pronto e nivelado, mas não fazer a conexão de gás por conta própria." },
+        { "texto": "Deixe uma folga de ventilação nas laterais e no fundo do nicho (não vede totalmente atrás do fogão) — o espaço evita acúmulo de calor e ajuda a dissipação, conforme orientação geral de instalação de fogões de embutir." },
+        { "texto": "Posicione o fogão dentro do nicho e verifique o nivelamento com um nível de bolha, ajustando os pés niveladores se o aparelho tiver esse recurso." },
+        { "texto": "Fixe o fogão ao móvel usando os suportes/parafusos indicados no manual do produto, sem forçar demais os pontos de fixação." },
+        { "texto": "Com a ligação de gás feita pelo instalador credenciado, teste o acendimento de cada boca e do forno antes de considerar a instalação concluída." }
+      ]
+    },
+    {
+      "nome": "Micro-ondas de Embutir 40L (BMO40AR)",
+      "categoria": "Micro-ondas de embutir",
+      "fonte": "https://www.taqi.com.br/file/general/microondas-brastemp-bmo40ar.pdf",
+      "passos": [
+        { "texto": "Prepare o nicho com aprox. 45cm de altura x 60cm de largura x 55cm de profundidade (medida de referência do BMO40AR/40L) — confirme no manual do modelo antes de montar o móvel." },
+        { "texto": "Garanta respiro de ventilação: deixe pelo menos 20cm livres na parte de cima do micro-ondas e 10cm nas laterais/fundo, sem fechar totalmente esses vãos — o aparelho precisa dissipar calor pra funcionar bem e durar mais." },
+        { "texto": "Se o nicho for parte de uma coluna com mais de um eletrodoméstico embutido (ex: forno + micro-ondas), reforce a estrutura do móvel nesse ponto — o conjunto pesa mais do que um nicho comum." },
+        { "texto": "Verifique se há tomada elétrica com aterramento próxima ao nicho, sem precisar de extensão, conforme indicado no manual do aparelho." },
+        { "texto": "Encaixe o micro-ondas no nicho e fixe com os suportes/parafusos fornecidos, checando o alinhamento antes de apertar tudo." },
+        { "texto": "Ligue o aparelho e teste o funcionamento (aquecimento e abertura/fechamento da porta) antes de finalizar a instalação." }
+      ]
+    },
+    {
+      "nome": "Lava-louças de Embutir",
+      "categoria": "Lava-louças de embutir",
+      "fonte": "https://www.brastemp.com.br/atendimento/perguntas-frequentes/como-instalar-minha-lava-loucas",
+      "passos": [
+        { "texto": "Prepare o vão sob a bancada considerando um padrão de mercado de 45cm ou 60cm de largura (varia por modelo) — confirme a largura exata do seu modelo antes de fechar o móvel." },
+        { "texto": "Reserve pelo menos 5 a 8cm de folga atrás do vão para passagem das mangueiras de água e do cabo elétrico, sem dobras apertadas." },
+        { "texto": "Confirme que a pressão da água na entrada está dentro da faixa aceita pelo aparelho (em geral entre 30 kPa e 1000 kPa) — pressão fora da faixa pode impedir o funcionamento correto." },
+        { "texto": "Posicione a lava-louças no vão, nivele com os pés ajustáveis e conecte a mangueira de entrada de água, a mangueira de drenagem e o cabo elétrico conforme o manual do modelo." },
+        { "texto": "Fixe a lava-louças na bancada/móvel lateral usando os suportes indicados, evitando que o aparelho fique solto ou desalinhado." },
+        { "texto": "Rode um ciclo de teste vazio (sem louça) pra confirmar que não há vazamento nas conexões antes de liberar o uso normal." }
+      ]
+    },
+    {
+      "nome": "Coifa de Parede (BAI91)",
+      "categoria": "Coifa",
+      "fonte": "https://www.brastemp.com.br/atendimento/perguntas-frequentes/a-que-distancia-devo-colocar-minha-coifa-do-fogao",
+      "passos": [
+        { "texto": "Meça a distância entre a boca do fogão/cooktop e o ponto onde a coifa vai ficar: mínimo de 65cm pra fogão/cooktop a gás e 50cm pra elétrico, medindo até o filtro de gordura da coifa. Se o manual do modelo pedir uma distância maior, siga o manual." },
+        { "texto": "Se o fogão/cooktop tiver tampa de vidro, confira a distância com a tampa aberta — a altura muda nessa posição." },
+        { "texto": "Marque na parede os pontos de fixação usando o gabarito ou as medidas indicadas no manual da coifa, conferindo o nivelamento horizontal antes de furar." },
+        { "texto": "Fixe os suportes na parede com buchas e parafusos adequados ao tipo de parede (alvenaria, drywall etc.) — o peso da coifa exige fixação firme." },
+        { "texto": "Pendure a coifa nos suportes e confirme que está firme e nivelada antes de seguir pra ligação elétrica e, se houver, o duto de saída de ar." },
+        { "texto": "Ligue a coifa e teste os níveis de velocidade do exaustor e a iluminação antes de concluir a instalação." }
+      ]
+    },
+    {
+      "nome": "Geladeira de Coluna Embutida",
+      "categoria": "Geladeira embutida",
+      "fonte": "https://www.brastemp.com.br/atendimento/perguntas-frequentes/posso-embutir-a-minha-geladeira",
+      "passos": [
+        { "texto": "Escolha o modelo de geladeira ANTES de fechar o projeto do móvel — o nicho precisa ser desenhado em volta do aparelho, não o contrário." },
+        { "texto": "Reserve folgas de ventilação: aprox. 10cm nas laterais, 10cm no fundo e 15cm no topo (referência geral do fabricante) — esse ar circulando é o que resfria o motor e evita consumo extra de energia." },
+        { "texto": "Confira se a porta da geladeira abre totalmente sem esbarrar em parede ou móvel vizinho — sem esse espaço não dá pra puxar as gavetas internas pra limpeza." },
+        { "texto": "Verifique se há tomada com aterramento no fundo do nicho, na posição indicada pelo manual do modelo." },
+        { "texto": "Posicione a geladeira no nicho, nivele com os pés ajustáveis e confirme que ela desliza/entra sem forçar as laterais." },
+        { "texto": "Ligue o aparelho e aguarde o tempo indicado no manual antes de guardar alimentos, conferindo se o motor não está encostando em nenhuma parte do móvel." }
+      ]
+    }
+  ]
+}

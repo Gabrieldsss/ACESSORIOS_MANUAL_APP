@@ -96,12 +96,12 @@ instalar cada peça.
     `eletrodomestico`, ver "Backend"); ao cadastrar um fabricante novo
     (aba "Fabricante" da tela Adicionar) você escolhe o tipo. Ao cadastrar
     um acessório/aparelho, o seletor de fabricante mostra os dois grupos
-    separados ("Ferragens" / "Eletrodomésticos"). Começou **vazio** (sem
-    exemplos pré-cadastrados, diferente do catálogo de ferragens) — se você
-    tocar em "Adicionar" estando na aba Eletrodomésticos e ainda não
-    existir nenhum fabricante desse tipo, cai direto na aba "Fabricante"
-    já com "Eletrodoméstico" pré-selecionado, pra guiar o primeiro
-    cadastro.
+    separados ("Ferragens" / "Eletrodomésticos"). Começou vazio e foi
+    populado em 2026-07-14 com 4 fabricantes e 10 aparelhos de exemplo
+    pesquisados (ver "Catálogo pré-cadastrado" abaixo); se um fabricante
+    novo for cadastrado sem nenhum outro do mesmo tipo existir ainda, a
+    tela "Adicionar" cai direto na aba "Fabricante" já com o tipo
+    pré-selecionado, pra guiar o cadastro.
 14. **Vídeo nos passos de instalação** (desde 2026-07-14) — cada passo,
     além da foto, aceita opcionalmente um vídeo (upload direto do
     celular, máx. 15MB, mesmo esquema de base64 usado pra fotos — ver
@@ -126,10 +126,32 @@ instalar cada peça.
 - **Blum**: Articulador Aventos HK-XS, Corrediça Tandem
 - **Häfele**: Pé para rodapé 80, Trilho telescópico
 - **Hettich**: Dobradiça Sensys (com amortecimento), Sistema Quadro
-- **Eletrodomésticos**: nenhum exemplo — catálogo começa vazio (ver item 13)
 
 Os textos de instalação desses itens são **genéricos/placeholder** — ajuste
 para o passo a passo real de cada peça depois.
+
+## Catálogo de eletrodomésticos (cadastrado em 2026-07-14)
+Populado a partir de uma pesquisa em manuais/páginas oficiais dos
+fabricantes (fontes documentadas em `eletrodomesticos-pesquisa/README.md`,
+pasta que fica fora de `prototipo/` — não é embarcada no APK, é só
+material de referência usado pra montar o cadastro):
+- **Brastemp**: Fogão de Embutir Clean 5 Bocas, Micro-ondas de Embutir 40L,
+  Lava-louças de Embutir, Coifa de Parede, Geladeira de Coluna Embutida
+- **Electrolux**: Forno de Embutir Elétrico ou a Gás, Cooktop de Embutir 5
+  Queimadores (Celebrate)
+- **Fischer**: Cooktop de Embutir Infinity, Forno de Embutir
+- **Continental**: Fogão de Embutir Evidenza 5 Bocas
+
+**Duas ressalvas importantes que ficaram nos próprios passos cadastrados:**
+1. Medidas de nicho/recorte variam por modelo mesmo dentro da mesma marca —
+   os passos que citam uma medida pedem pra conferir o gabarito/manual do
+   modelo específico antes de cortar bancada ou fechar marcenaria.
+2. Fogão/forno/cooktop **a gás**: a ligação de gás no Brasil segue a NBR
+   13103 e exige instalador credenciado — os passos deixam claro que o
+   papel do montador é preparar e fixar o nicho, não fazer a ligação de gás.
+
+Nenhum desses itens tem foto (nem do produto nem dos passos) ainda — foi
+cadastrado só com texto; fica como próximo passo adicionar fotos reais.
 
 ## Imagens e logos
 Não é possível baixar e reutilizar os arquivos oficiais de logo/fotos de
@@ -278,8 +300,12 @@ registrados pra quando for preciso recriar/trocar de serviço:
    verdade.
 
 ## Próximos passos
-- Cadastrar os primeiros fabricantes/aparelhos de eletrodoméstico de
-  verdade (catálogo começou vazio de propósito, ver item 13).
+- Adicionar fotos (produto e passos) aos 10 aparelhos de eletrodoméstico
+  cadastrados em 2026-07-14 — foram cadastrados só com texto.
+- Revisar os textos de instalação de eletrodomésticos com alguém da área
+  antes de divulgar pros montadores — foram compilados de manuais/páginas
+  oficiais dos fabricantes, mas nunca testados na prática (ver ressalvas
+  em "Catálogo de eletrodomésticos" acima).
 - Acompanhar o uso de armazenamento do Neon depois que vídeos de passo
   começarem a ser cadastrados de verdade (ver "Backend" > vídeo dos
   passos) — se ficar apertado, migrar pra um serviço de storage de vídeo
