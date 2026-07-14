@@ -130,28 +130,23 @@ instalar cada peça.
 Os textos de instalação desses itens são **genéricos/placeholder** — ajuste
 para o passo a passo real de cada peça depois.
 
-## Catálogo de eletrodomésticos (cadastrado em 2026-07-14)
-Populado a partir de uma pesquisa em manuais/páginas oficiais dos
-fabricantes (fontes documentadas em `eletrodomesticos-pesquisa/README.md`,
-pasta que fica fora de `prototipo/` — não é embarcada no APK, é só
-material de referência usado pra montar o cadastro):
-- **Brastemp**: Fogão de Embutir Clean 5 Bocas, Micro-ondas de Embutir 40L,
-  Lava-louças de Embutir, Coifa de Parede, Geladeira de Coluna Embutida
-- **Electrolux**: Forno de Embutir Elétrico ou a Gás, Cooktop de Embutir 5
-  Queimadores (Celebrate)
-- **Fischer**: Cooktop de Embutir Infinity, Forno de Embutir
-- **Continental**: Fogão de Embutir Evidenza 5 Bocas
+## Catálogo de eletrodomésticos (fabricantes cadastrados em 2026-07-14)
+Cadastrados os 4 fabricantes mais conhecidos — **Brastemp**, **Electrolux**,
+**Fischer** e **Continental** (`tipo: eletrodomestico`) — ainda **sem
+nenhum aparelho** dentro deles; a aba Eletrodomésticos hoje mostra os
+chips desses fabricantes mas a lista de aparelhos fica vazia até alguém
+cadastrar o primeiro pela tela "Adicionar".
 
-**Duas ressalvas importantes que ficaram nos próprios passos cadastrados:**
-1. Medidas de nicho/recorte variam por modelo mesmo dentro da mesma marca —
-   os passos que citam uma medida pedem pra conferir o gabarito/manual do
-   modelo específico antes de cortar bancada ou fechar marcenaria.
-2. Fogão/forno/cooktop **a gás**: a ligação de gás no Brasil segue a NBR
-   13103 e exige instalador credenciado — os passos deixam claro que o
-   papel do montador é preparar e fixar o nicho, não fazer a ligação de gás.
-
-Nenhum desses itens tem foto (nem do produto nem dos passos) ainda — foi
-cadastrado só com texto; fica como próximo passo adicionar fotos reais.
+Uma rodada anterior chegou a popular 10 aparelhos (forno, cooktop,
+coifa etc.) com passo a passo de texto pesquisado em manuais/páginas
+oficiais, mas foi desfeita a pedido do usuário antes de publicar (sem
+foto/diagrama de instalação, o texto sozinho não foi considerado pronto
+pra divulgar aos montadores). Esse conteúdo continua disponível em
+`eletrodomesticos-pesquisa/*.json` (pasta fora de `prototipo/`, não
+embarcada no APK) como ponto de partida pra quando alguém for cadastrar
+os aparelhos de verdade — inclui as fontes e as ressalvas sobre medida de
+nicho variar por modelo e sobre ligação de gás exigir instalador
+credenciado (NBR 13103).
 
 ## Imagens e logos
 Não é possível baixar e reutilizar os arquivos oficiais de logo/fotos de
@@ -300,12 +295,11 @@ registrados pra quando for preciso recriar/trocar de serviço:
    verdade.
 
 ## Próximos passos
-- Adicionar fotos (produto e passos) aos 10 aparelhos de eletrodoméstico
-  cadastrados em 2026-07-14 — foram cadastrados só com texto.
-- Revisar os textos de instalação de eletrodomésticos com alguém da área
-  antes de divulgar pros montadores — foram compilados de manuais/páginas
-  oficiais dos fabricantes, mas nunca testados na prática (ver ressalvas
-  em "Catálogo de eletrodomésticos" acima).
+- Cadastrar os primeiros aparelhos de verdade (com foto) dentro dos 4
+  fabricantes de eletrodoméstico já criados — o rascunho pesquisado em
+  `eletrodomesticos-pesquisa/*.json` serve de ponto de partida pros
+  textos, mas revise antes de publicar (nunca testado na prática, ver
+  ressalvas em "Catálogo de eletrodomésticos" acima).
 - Acompanhar o uso de armazenamento do Neon depois que vídeos de passo
   começarem a ser cadastrados de verdade (ver "Backend" > vídeo dos
   passos) — se ficar apertado, migrar pra um serviço de storage de vídeo

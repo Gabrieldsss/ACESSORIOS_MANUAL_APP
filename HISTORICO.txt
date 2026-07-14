@@ -998,15 +998,49 @@ HISTORICO DE ALTERACOES
   e "revisar os textos com alguem da area antes de divulgar" (textos
   foram compilados de fontes publicas, nunca testados na pratica).
 
+[2026-07-14] Aparelhos de eletrodomestico removidos, so os fabricantes ficaram
+- Usuario perguntou pelas "imagens de medidas" dos aparelhos cadastrados.
+  Expliquei duas coisas: (1) os PDFs oficiais que a pesquisa achou vieram
+  como imagem/binario, sem texto/figura extraivel (falta poppler/pdftoppm
+  nessa maquina pro Read tool renderizar PDF); (2) mesmo que desse,
+  reusar diagrama oficial do fabricante teria o mesmo problema de
+  direitos autorais ja documentado no ESCOPO.md pro catalogo de ferragens
+  (nao da pra baixar/reusar imagem oficial de fabricante). Ofereci
+  desenhar diagramas simples e originais (meus, nao copiados de manual)
+  com as medidas ja pesquisadas.
+- Usuario respondeu "remova tudo de la entao" - em vez de aceitar os
+  diagramas, pediu pra desfazer o cadastro. Removidos os 4 fabricantes
+  (brastemp-mrl6dhss, electrolux-mrl6dndw, fischer-mrl6dpu2,
+  continental-mrl6dsht) via DELETE /fabricantes (cascade apaga os 10
+  aparelhos junto).
+- Ao conferir o catalogo depois da remocao, notado que 3 itens do
+  catalogo ORIGINAL de ferragem tinham sumido (blum-tandem,
+  hettich-quadro, hafele-trilho-telescopico) - nao tinha relacao com o
+  DELETE (ids completamente diferentes). Restaurado rodando "npm run
+  seed" de novo (idempotente). Perguntado ao usuario se ele tinha mexido
+  no app de producao nesse meio tempo - confirmou que sim, foi ele
+  testando/navegando no app de verdade (nao era bug, ja tinha acontecido
+  2x antes nessa sessao pelo mesmo motivo).
+- Usuario pediu "so cadastre os fabricantes mais conhecidos" - lido como
+  "cadastrar so os fabricantes (sem os aparelhos dessa vez)". Recriados
+  os mesmos 4 fabricantes (Brastemp, Electrolux, Fischer, Continental,
+  tipo eletrodomestico) via POST /fabricantes, SEM nenhum aparelho dentro
+  - a aba Eletrodomesticos mostra os chips das marcas mas a lista fica
+  vazia ate alguem cadastrar o primeiro aparelho de verdade (com foto)
+  pela tela Adicionar. eletrodomesticos-pesquisa/IMPORTADO.json e
+  ESCOPO.md atualizados pra refletir esse estado (fabricantes cadastrados,
+  aparelhos ficam como rascunho na pasta de pesquisa pra quando alguem for
+  cadastrar de verdade).
+
 ===========================================================================
 PENDENCIAS / PROXIMOS PASSOS
 ===========================================================================
-- Adicionar fotos (produto e passos) aos 10 aparelhos de eletrodomestico
-  cadastrados em 2026-07-14 - hoje so tem texto.
-- Revisar com alguem da area os textos de instalacao de eletrodomestico
-  antes de divulgar pros montadores (compilados de manuais/paginas
-  publicas dos fabricantes via pesquisa, nunca testados na pratica -
-  ver eletrodomesticos-pesquisa/README.md pras fontes usadas).
+- Cadastrar os primeiros aparelhos de eletrodomestico de verdade (com
+  foto) dentro dos 4 fabricantes ja criados (Brastemp, Electrolux,
+  Fischer, Continental) - o rascunho de texto pesquisado continua em
+  eletrodomesticos-pesquisa/*.json como ponto de partida, mas revisar
+  antes de publicar (nunca testado na pratica, ver README.md da pasta
+  pras fontes usadas).
 - Acompanhar o uso de armazenamento do Neon (free tier) depois que
   videos de passo comecarem a ser cadastrados de verdade - se ficar
   apertado, migrar pra um servico de storage de video dedicado.
