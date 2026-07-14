@@ -27,10 +27,29 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Em telas de celular de verdade (o app instalado, ou o navegador do
-   celular), a "moldura de celular" (pensada só pra visualizar no
-   computador durante o protótipo) vira a tela cheia de verdade, sem
-   borda/cantos arredondados/sombra, ocupando 100% do aparelho. */
+/* Dentro do app instalado de verdade (Capacitor, ver js/plataforma.js),
+   a "moldura de celular" (pensada só pra visualizar no computador
+   durante o protótipo) vira tela cheia de verdade, sem borda/cantos
+   arredondados/sombra - em QUALQUER tamanho de aparelho (celular ou
+   tablet, não depende da largura da tela). Em tablets/telas bem largas,
+   o conteúdo fica com um teto de largura confortável pra leitura, mas
+   sem mostrar nenhuma borda/moldura ao redor (o fundo da página usa a
+   mesma cor de fundo do conteúdo, então não aparece como uma "caixa" -
+   só o conteúdo fica centralizado). */
+html.app-nativo body { padding: 0; background: #f7f8fa; }
+html.app-nativo .phone {
+  width: 100%;
+  max-width: 600px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* Testando o protótipo direto num navegador de celular (sem Capacitor,
+   window.Capacitor não existe) - mesma tela cheia, baseada na largura
+   já que não dá pra detectar "é um app instalado" nesse caso. */
 @media (max-width: 480px) {
   body { padding: 0; background: #f7f8fa; }
   .phone {
@@ -83,6 +102,34 @@ body {
   border: 1px solid #d7dbe0;
   font-size: 14px;
   margin-bottom: 14px;
+}
+
+.chip-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  margin-bottom: 4px;
+  scrollbar-width: none;
+}
+.chip-row::-webkit-scrollbar { display: none; }
+.chip {
+  flex-shrink: 0;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid #d7dbe0;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  color: #4b5563;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color .15s, border-color .15s, color .15s;
+}
+.chip.active {
+  background: var(--chip-cor, #2f6b4f);
+  border-color: var(--chip-cor, #2f6b4f);
+  color: #fff;
 }
 
 .section-title {
@@ -318,6 +365,14 @@ body {
 }
 .step-image img { width: 100%; height: 100%; object-fit: cover; }
 
+.step-video {
+  width: 100%;
+  max-height: 260px;
+  border-radius: 14px;
+  background: #000;
+  margin-bottom: 16px;
+}
+
 .step-text {
   font-size: 18px;
   line-height: 1.6;
@@ -339,6 +394,24 @@ body {
 .nav-buttons .prev { background: #eef1f0; color: #333; }
 .nav-buttons .next { background: var(--cor, #2f6b4f); color: #fff; }
 .nav-buttons button:disabled { opacity: .4; cursor: default; }
+
+#avaliacao { margin-top: 24px; text-align: center; }
+.avaliacao-pergunta { font-size: 14px; color: #4b5563; margin-bottom: 10px; }
+.avaliacao-botoes { display: flex; gap: 10px; justify-content: center; }
+.avaliacao-botoes button {
+  flex: 1;
+  max-width: 140px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #d7dbe0;
+  background: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.avaliacao-botoes button:active { background: #eef1f0; }
+.avaliacao-obrigado { font-size: 14px; color: #4b5563; }
+.avaliacao-resumo { margin-top: 4px; font-size: 12px; color: #9aa2b1; }
 
 .field { margin-bottom: 14px; }
 .field label { display: block; font-size: 13px; color: #374151; margin-bottom: 6px; font-weight: 600; }
@@ -436,24 +509,6 @@ body {
   letter-spacing: .01em;
   padding: 4px;
 }
-
-.fabricante-list { display: flex; flex-direction: column; gap: 12px; }
-.fabricante-card {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-left: 5px solid var(--cor, #2f6b4f);
-  border-radius: 14px;
-  padding: 14px;
-  text-decoration: none;
-  color: inherit;
-}
-.fabricante-card:active { background: #f0f2f4; }
-.fabricante-card .logo-slot { width: 60px; height: 60px; flex-shrink: 0; background: #f7f8fa; border-radius: 10px; overflow: hidden; }
-.fabricante-card .info strong { font-size: 17px; display: block; }
-.fabricante-card .info span { font-size: 12px; color: #6b7280; }
 
 .segmented {
   display: flex;

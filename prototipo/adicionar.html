@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>Adicionar</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="js/plataforma.js"></script>
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -55,6 +56,14 @@
 
     <div id="form-fabricante" style="display:none;">
       <div class="field">
+        <label>Tipo</label>
+        <div class="segmented" id="segmented-tipo-fabricante">
+          <button type="button" id="tipo-fabricante-ferragem" class="active">Ferragem</button>
+          <button type="button" id="tipo-fabricante-eletro">Eletrodoméstico</button>
+        </div>
+      </div>
+
+      <div class="field">
         <label>Logo do fabricante</label>
         <label class="upload" id="upload-logo-fabricante">
           <span class="icon">🖼️</span>
@@ -92,8 +101,25 @@ let capaBase64 = null;
 let capaOriginal = null;
 let logoFabricanteBase64 = null;
 let logoFabricanteOriginal = null;
+let tipoFabricanteAtual = "ferragem";
 let passos = [];
 let formAlterado = false;
+
+function definirTipoFabricante(tipo) {
+  tipoFabricanteAtual = tipo === "eletrodomestico" ? "eletrodomestico" : "ferragem";
+  document.getElementById("tipo-fabricante-ferragem").classList.toggle("active", tipoFabricanteAtual === "ferragem");
+  document.getElementById("tipo-fabricante-eletro").classList.toggle("active", tipoFabricanteAtual === "eletrodomestico");
+}
+
+function renderSelectFabricante() {
+  const fabricantes = getTodosFabricantes();
+  const ferragens = fabricantes.filter((f) => (f.tipo || "ferragem") === "ferragem");
+  const eletro = fabricantes.filter((f) => f.tipo === "eletrodomestico");
+  const optgroup = (label, itens) => itens.length
+    ? `<optgroup label="${label}">${itens.map((f) => `<option value="${f.id}">${f.nome}</option>`).join("")}</optgroup>`
+    : "";
+  selectFabricante.innerHTML = optgroup("Ferragens", ferragens) + optgroup("Eletrodomésticos", eletro);
+}
 
 function marcarAlterado() {
   formAlterado = true;
@@ -133,18 +159,27 @@ async function iniciar() {
   }
 
   await sincronizarCatalogo();
-  selectFabricante.innerHTML = getTodosFabricantes().map(f => `<option value="${f.id}">${f.nome}</option>`).join("");
+  renderSelectFabricante();
 
   if (idEditarAcessorio) {
     iniciarEdicaoAcessorio();
   } else if (idEditarFabricante) {
     iniciarEdicaoFabricante();
   } else {
+    const tipoContexto = getQueryParam("tipo") === "eletrodomestico" ? "eletrodomestico" : "ferragem";
+    definirTipoFabricante(tipoContexto);
+
     const fabricantePreSelecionado = getQueryParam("fabricante");
     if (fabricantePreSelecionado && getFabricantePorId(fabricantePreSelecionado)) {
       selectFabricante.value = fabricantePreSelecionado;
+    } else {
+      const semFabricanteDoTipo = getTodosFabricantes().every((f) => (f.tipo || "ferragem") !== tipoContexto);
+      if (tipoContexto === "eletrodomestico" && semFabricanteDoTipo) mostrarAba("fabricante");
     }
   }
+
+  document.getElementById("tipo-fabricante-ferragem").addEventListener("click", () => definirTipoFabricante("ferragem"));
+  document.getElementById("tipo-fabricante-eletro").addEventListener("click", () => definirTipoFabricante("eletrodomestico"));
 
   document.getElementById("tab-acessorio").addEventListener("click", () => mostrarAba("acessorio"));
   document.getElementById("tab-fabricante").addEventListener("click", () => mostrarAba("fabricante"));
@@ -198,7 +233,8 @@ function iniciarEdicaoAcessorio() {
   passos = original.passos.map(p => ({
     texto: p.texto,
     imagemBase64: p.imagemBase64 || null,
-    imagemOriginal: p.imagemBase64 ? null : (p.imagem || null)
+    imagemOriginal: p.imagemBase64 ? null : (p.imagem || null),
+    videoBase64: p.videoBase64 || null
   }));
 }
 
@@ -214,6 +250,7 @@ function iniciarEdicaoFabricante() {
   mostrarAba("fabricante");
   document.getElementById("btn-salvar-fabricante").textContent = "Salvar alterações";
 
+  definirTipoFabricante(original.tipo || "ferragem");
   document.getElementById("input-fabricante-nome").value = original.nome;
   document.getElementById("input-fabricante-cor").value = original.cor || "#2f6b4f";
 
@@ -248,7 +285,7 @@ function mostrarAba(aba) {
 }
 
 function adicionarPasso() {
-  passos.push({ texto: "", imagemBase64: null, imagemOriginal: null });
+  passos.push({ texto: "", imagemBase64: null, imagemOriginal: null, videoBase64: null });
   marcarAlterado();
   renderPassos();
 }
@@ -269,6 +306,30 @@ function onImagemPasso(i, input) {
   });
 }
 
+const VIDEO_TAMANHO_MAXIMO = 15 * 1024 * 1024; // 15MB - upload vai direto pro banco como base64
+
+function onVideoPasso(i, input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > VIDEO_TAMANHO_MAXIMO) {
+    alert("Vídeo muito grande (máx. 15MB). Grave um vídeo mais curto ou em qualidade menor.");
+    input.value = "";
+    return;
+  }
+  const leitor = new FileReader();
+  leitor.onload = () => {
+    passos[i].videoBase64 = leitor.result;
+    renderPassos();
+  };
+  leitor.readAsDataURL(file);
+}
+
+function removerVideoPasso(i) {
+  passos[i].videoBase64 = null;
+  marcarAlterado();
+  renderPassos();
+}
+
 function onTextoPasso(i, value) {
   passos[i].texto = value;
 }
@@ -284,6 +345,16 @@ function renderPassos() {
           ${p.imagemBase64 ? `<img src="${p.imagemBase64}">` : (p.imagemOriginal ? assetImg(p.imagemOriginal, "Foto atual") : `<span class="icon">🖼️</span><span>Escolher foto do passo</span>`)}
           <input type="file" accept="image/*" onchange="onImagemPasso(${i}, this)">
         </label>
+      </div>
+      <div class="field">
+        <label>Vídeo do passo (opcional, máx. 15MB)</label>
+        ${p.videoBase64
+          ? `<video src="${p.videoBase64}" controls style="width:100%;border-radius:10px;max-height:200px;background:#000"></video>
+             <button type="button" class="btn-secondary" style="margin-top:8px" onclick="removerVideoPasso(${i})">Remover vídeo</button>`
+          : `<label class="upload">
+               <span class="icon">🎬</span><span>Escolher vídeo do passo</span>
+               <input type="file" accept="video/*" onchange="onVideoPasso(${i}, this)">
+             </label>`}
       </div>
       <div class="field">
         <label>Descrição do passo</label>
@@ -306,9 +377,13 @@ async function salvarAcessorio() {
   if (passos.some(p => !p.texto.trim())) { alert("Preencha a descrição de todos os passos."); return; }
 
   const passosFinal = passos.map(p => {
-    if (p.imagemBase64) return { texto: p.texto, imagemBase64: p.imagemBase64 };
-    if (p.imagemOriginal) return { texto: p.texto, imagem: p.imagemOriginal };
-    return { texto: p.texto };
+    const base = p.imagemBase64
+      ? { texto: p.texto, imagemBase64: p.imagemBase64 }
+      : p.imagemOriginal
+        ? { texto: p.texto, imagem: p.imagemOriginal }
+        : { texto: p.texto };
+    if (p.videoBase64) base.videoBase64 = p.videoBase64;
+    return base;
   });
 
   const btn = document.getElementById("btn-salvar-acessorio");
@@ -345,7 +420,7 @@ async function salvarFabricante() {
   btn.disabled = true;
   try {
     if (idEditarFabricante) {
-      const patch = { nome, cor };
+      const patch = { nome, cor, tipo: tipoFabricanteAtual };
       if (logoFabricanteBase64) patch.logoBase64 = logoFabricanteBase64;
       await editarFabricante(idEditarFabricante, patch);
       formAlterado = false;
@@ -353,7 +428,7 @@ async function salvarFabricante() {
       return;
     }
 
-    const criado = await criarFabricante({ nome, cor, logoBase64: logoFabricanteBase64 });
+    const criado = await criarFabricante({ nome, cor, logoBase64: logoFabricanteBase64, tipo: tipoFabricanteAtual });
     formAlterado = false;
     window.location.href = `fabricante.html?id=${criado.id}`;
   } catch (e) {

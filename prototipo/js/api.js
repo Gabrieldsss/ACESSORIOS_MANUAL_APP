@@ -43,7 +43,7 @@ function cabecalhosComToken() {
 }
 
 function apiGet(caminho) {
-  return apiFetch(caminho);
+  return apiFetch(caminho, { headers: cabecalhosComToken() });
 }
 
 function apiPost(caminho, dados) {

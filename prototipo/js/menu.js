@@ -20,10 +20,10 @@
         </div>
         <nav class="menu-nav">
           <a href="favoritos.html">⭐ <span>Favoritos</span></a>
+          <a href="ajuda.html">❓ <span>Como encontrar um manual</span></a>
         </nav>
         <div class="menu-info">
           <div class="menu-info-versao">Versão ${VERSAO_APP}</div>
-          <div class="menu-info-sub">Protótipo — sem backend</div>
         </div>
       </div>
     `;

@@ -81,6 +81,22 @@ async function removerAcessorio(id) {
 }
 
 // ---------------------------------------------------------------------
+// Avaliação do passo a passo ("essa instrução te ajudou?") - pública,
+// não exige login. jaAvaliou()/marcarAvaliado() usam localStorage só pra
+// impedir votar mais de uma vez no mesmo aparelho pelo mesmo aparelho
+// (celular); não sincroniza com o backend.
+// ---------------------------------------------------------------------
+function jaAvaliou(acessorioId) {
+  return !!localStorage.getItem(`avaliado-${acessorioId}`);
+}
+
+async function avaliarAcessorio(acessorioId, util) {
+  await apiPost(`/acessorios/${acessorioId}/avaliacao`, { util });
+  localStorage.setItem(`avaliado-${acessorioId}`, "1");
+  await sincronizarCatalogo();
+}
+
+// ---------------------------------------------------------------------
 // Favoritos: lista de ids de acessório marcados pelo usuário, guardada
 // no localStorage. É só uma preferência do aparelho - nunca sincroniza
 // com o backend, funciona 100% offline, vale tanto pra item de catálogo

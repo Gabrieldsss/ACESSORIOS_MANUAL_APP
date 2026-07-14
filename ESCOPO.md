@@ -4,7 +4,10 @@
 Ferramenta de apoio para montadores de móveis: consultar acessórios/ferragens
 (dobradiças, corrediças, pés, articuladores etc.) organizados por fabricante —
 Blum, Häfele, Hettich — com imagem, especificações e passo a passo de
-instalação. O próprio montador também pode cadastrar acessórios adicionais.
+instalação. Desde 2026-07-14 também dá pra consultar manuais de
+**eletrodomésticos** (geladeira, fogão etc.), num catálogo separado dentro da
+mesma tela Início. O próprio montador também pode cadastrar acessórios e
+aparelhos adicionais.
 
 ## Público-alvo
 Montadores de móveis autônomos ou de empresas de montagem, que trabalham com
@@ -12,11 +15,21 @@ ferragens de fabricantes diferentes e precisam consultar rapidamente como
 instalar cada peça.
 
 ## Funcionalidades (v1 / MVP)
-1. **Lista de fabricantes** — Blum, Häfele, Hettich pré-cadastrados (cada um
-   com sua logo, slot editável, ver seção "Imagens e logos" abaixo), mais os
-   fabricantes que o próprio usuário cadastrar (item 6).
-2. **Lista de acessórios por fabricante** — catálogo pré-cadastrado +
-   acessórios do próprio usuário, com busca por nome/categoria.
+1. **Catálogo de acessórios (tela Início)** — desde 2026-07-13 o principal
+   da tela Início é o catálogo de acessórios (não mais a lista de
+   fabricantes): uma busca por nome/categoria e uma lista única com todos
+   os acessórios (catálogo + cadastrados pelo usuário), cada card já
+   mostrando de qual fabricante é. O fabricante virou informação
+   **secundária**: uma fileira de chips (Blum, Häfele, Hettich... + "Todos")
+   filtra a lista rápido, sem precisar abrir uma tela separada; busca e
+   filtro por chip funcionam juntos. Desde 2026-07-14, um alternador no
+   topo ("Ferragens" / "Eletrodomésticos") troca entre os dois catálogos
+   (ver item 13) — cada fabricante tem um `tipo`, e a busca/chips/lista
+   só mostram o que pertence à aba ativa.
+2. **Tela do fabricante** — acessível pela tela de detalhe do acessório
+   (seta "←" volta pra ela) ou pela edição de um acessório existente; lista
+   os acessórios daquele fabricante e tem os botões de editar/remover o
+   próprio fabricante (item 8).
 3. **Detalhe do acessório** — imagem do produto, fabricante, categoria,
    botão "Ver instalação".
 4. **Passo a passo de instalação** — 1 imagem + 1 texto por tela, navegação
@@ -46,9 +59,10 @@ instalar cada peça.
    fabricante também remove os acessórios cadastrados nele (o backend faz
    isso em cascata no banco).
 9. **Menu lateral** — ícone ☰ no topo de toda tela, abre um painel deslizante
-   (por cima da própria tela, não precisa sair dela) com o link para
-   "Favoritos" e a versão do app. Não duplica a navegação da barra inferior
-   (Início/Adicionar/Conta); serve pra coisas que não têm outro lugar fixo.
+   (por cima da própria tela, não precisa sair dela) com links pra
+   "Favoritos" e "Como encontrar um manual" (item 12); mais a versão do
+   app no rodapé. Não duplica a navegação da barra inferior (Início/
+   Adicionar/Conta); serve pra coisas que não têm outro lugar fixo.
 10. **Favoritos** — botão de estrela (☆/★) em qualquer acessório, tanto na
     lista de um fabricante quanto na tela de detalhe, pra marcar/desmarcar
     como favorito sem precisar estar logado (é só uma preferência de
@@ -66,12 +80,53 @@ instalar cada peça.
     GitHub Releases do projeto; se sim, mostra uma faixa **dispensável**
     ("Nova versão disponível" + botão "Atualizar") — o montador pode
     ignorar e seguir usando a versão instalada. Ver
-    `prototipo/js/atualizacao.js` e `prototipo/js/versao.js`.
+    `prototipo/js/atualizacao.js` e `prototipo/js/versao.js`. Desde
+    2026-07-13, o app detecta quando está rodando instalado de verdade
+    (`prototipo/js/plataforma.js`, via `window.Capacitor.isNativePlatform()`)
+    e usa a tela cheia nesse caso em **qualquer tamanho de aparelho**
+    (celular ou tablet) — antes disso a regra olhava só a largura da tela
+    e não cobria tablet. No navegador de computador (preview de
+    desenvolvimento) continua mostrando a moldura de celular.
+12. **Tela de ajuda** ("Como encontrar um manual", acessível pelo menu
+    lateral) — explica em 3 passos as formas de achar um manual: busca por
+    nome, navegação por fabricante e favoritos.
+13. **Catálogo de eletrodomésticos** (desde 2026-07-14) — segundo catálogo,
+    separado do de ferragens (item 1), acessível pelo alternador na tela
+    Início. Cada fabricante tem um campo `tipo` (`ferragem` ou
+    `eletrodomestico`, ver "Backend"); ao cadastrar um fabricante novo
+    (aba "Fabricante" da tela Adicionar) você escolhe o tipo. Ao cadastrar
+    um acessório/aparelho, o seletor de fabricante mostra os dois grupos
+    separados ("Ferragens" / "Eletrodomésticos"). Começou **vazio** (sem
+    exemplos pré-cadastrados, diferente do catálogo de ferragens) — se você
+    tocar em "Adicionar" estando na aba Eletrodomésticos e ainda não
+    existir nenhum fabricante desse tipo, cai direto na aba "Fabricante"
+    já com "Eletrodoméstico" pré-selecionado, pra guiar o primeiro
+    cadastro.
+14. **Vídeo nos passos de instalação** (desde 2026-07-14) — cada passo,
+    além da foto, aceita opcionalmente um vídeo (upload direto do
+    celular, máx. 15MB, mesmo esquema de base64 usado pra fotos — ver
+    "Imagens e logos"). Aparece no passo a passo (tela "Passo a passo")
+    logo acima do texto, com os controles padrão de vídeo do navegador.
+15. **Avaliação do passo a passo** (desde 2026-07-14) — no último passo,
+    "Chegou ao fim! Essa instrução te ajudou?" com botões 👍/👎. Não exige
+    login; 1 voto por acessório por aparelho (controlado via
+    `localStorage`, não é à prova de burla, mas suficiente pra um app
+    interno). Quem tem permissão de editar (`podeAdicionar`) vê a
+    contagem agregada ("👍 12 · 👎 3") na tela de detalhe do acessório —
+    serve de sinal de quais textos/passos precisam ser reescritos.
+16. **Compartilhar manual** (desde 2026-07-14) — botão "📤 Compartilhar" na
+    tela de detalhe do acessório. Gera um link público
+    (`<API_BASE_URL>/manual/:id`) que abre o passo a passo numa página
+    web simples, **sem precisar ter o app instalado nem estar logado**
+    (rota pública nova no backend, ver "Backend"). Usa o compartilhamento
+    nativo do aparelho quando disponível; senão abre o WhatsApp com o
+    link pronto.
 
 ## Catálogo pré-cadastrado (exemplos incluídos no protótipo)
 - **Blum**: Articulador Aventos HK-XS, Corrediça Tandem
 - **Häfele**: Pé para rodapé 80, Trilho telescópico
 - **Hettich**: Dobradiça Sensys (com amortecimento), Sistema Quadro
+- **Eletrodomésticos**: nenhum exemplo — catálogo começa vazio (ver item 13)
 
 Os textos de instalação desses itens são **genéricos/placeholder** — ajuste
 para o passo a passo real de cada peça depois.
@@ -95,10 +150,27 @@ verdade — ver a pasta `backend/` na raiz do projeto.
 - **Stack**: Node.js + Express, banco Postgres na nuvem ([Neon](https://neon.tech),
   free tier), login com senha em hash (`bcryptjs`) + sessão via token JWT
   (`jsonwebtoken`). Sem ORM — SQL direto (`pg`), schema pequeno (4 tabelas,
-  ver `backend/schema.sql`).
+  ver `backend/schema.sql`). Cada fabricante tem uma coluna `tipo`
+  (`ferragem` ou `eletrodomestico`, default `ferragem`) que separa os dois
+  catálogos que aparecem no alternador da tela Início (item 1/13).
 - **Rotas**: `POST /auth/login` (público), `GET /catalogo` (público — é o
   que o app consulta), `POST/PUT/DELETE /fabricantes[/:id]` e
-  `POST/PUT/DELETE /acessorios[/:id]` (exigem token **e** `pode_adicionar`).
+  `POST/PUT/DELETE /acessorios[/:id]` (exigem token **e** `pode_adicionar`),
+  `POST /acessorios/:id/avaliacao` (público, `{util: true|false}` — item
+  15), `GET /manual/:id` (público, página HTML do manual — item 16) e
+  `GET /assets/*` (estático, serve `prototipo/assets/` pra essa página
+  funcionar fora do app).
+- **Vídeo dos passos** (item 14): coluna `video_base64` em `passos`, mesmo
+  esquema de upload direto das fotos — **sem serviço de storage de vídeo
+  separado**, o arquivo vira base64 e vai pro Postgres como os demais.
+  Isso tem um limite prático: vídeo pesa muito mais que foto, então o
+  upload é limitado a 15MB por vídeo no cliente (`prototipo/adicionar.html`)
+  e o corpo das requisições no backend foi ampliado pra 60MB
+  (`express.json({ limit: "60mb" })`). **Fique de olho no uso de
+  armazenamento do Neon** (free tier tem limite de espaço) se muitos
+  passos passarem a ter vídeo — se isso virar um problema, a solução
+  correta é migrar pra um serviço de storage de vídeo de verdade
+  (ex: Cloudinary, Bunny Stream), o que está fora do escopo atual.
 - **Offline continua funcionando pra consulta**: toda vez que uma tela abre,
   o app tenta buscar `GET /catalogo` e guarda o resultado em
   `localStorage.catalogoCache` (`prototipo/js/data.js` →
@@ -125,21 +197,24 @@ verdade — ver a pasta `backend/` na raiz do projeto.
 ## Fora do escopo (v1)
 - Publicação em loja (Play Store) — distribuição é por APK direto (ver
   item 11 e "Como gerar/publicar uma atualização" abaixo).
-- Tela de administração pra gerenciar usuários/permissões (hoje é direto
-  no banco — ver "Backend" acima e "Próximos passos").
+- Tela de administração pra gerenciar usuários/permissões pelo app — foi
+  implementada e depois desfeita a pedido (ver `HISTORICO.txt`,
+  2026-07-13); criar/editar login continua sendo feito direto no banco.
 - Orçamento, agenda ou gestão de clientes.
 
 ## Telas
 | Tela | Descrição |
 |---|---|
-| Início | Lista de fabricantes — os 3 fixos + os cadastrados pelo usuário (logo + nome + qtd. de acessórios) |
-| Fabricante | Lista única de acessórios do fabricante (catálogo + meus, cada item com selo "Catálogo"/"Meu"), busca, botão "+ adicionar" (só visível com permissão) |
-| Detalhe do acessório | Foto, fabricante, categoria, resumo dos passos, botão "Ver instalação" |
-| Passo a passo | Imagem grande + texto do passo, navegação, progresso |
-| Adicionar / Editar | Alterna entre aba "Acessório" (fabricante, dados + passos dinâmicos foto+texto) e aba "Fabricante" (nome, cor, logo). Mesma tela é reaproveitada, pré-preenchida, quando vem de "Editar". Exige login **com permissão** (`podeAdicionar`); a aba "Adicionar" da barra inferior e o botão "+" só aparecem pra quem tem essa permissão. |
+| Início | Alternador Ferragens/Eletrodomésticos + catálogo de acessórios (busca por nome + chips de fabricante pra filtrar, "Todos" por padrão) — fabricante é secundário aqui, ver itens 1 e 13 |
+| Fabricante | Lista única de acessórios do fabricante (catálogo + meus, cada item com selo "Catálogo"/"Meu"), busca, botão "+ adicionar" (só visível com permissão); botões de editar/remover o fabricante |
+| Detalhe do acessório | Foto, fabricante, categoria, resumo dos passos, botão "Ver instalação", botão "📤 Compartilhar" (item 16); contagem de avaliações (item 15) visível pra quem tem permissão |
+| Passo a passo | Imagem grande + vídeo opcional (item 14) + texto do passo, navegação, progresso; no último passo, avaliação "essa instrução te ajudou?" (item 15) |
+| Adicionar / Editar | Alterna entre aba "Acessório" (fabricante — agrupado por Ferragens/Eletrodomésticos no seletor — dados + passos dinâmicos com foto, vídeo opcional e texto) e aba "Fabricante" (tipo, nome, cor, logo). Mesma tela é reaproveitada, pré-preenchida, quando vem de "Editar". Exige login **com permissão** (`podeAdicionar`); a aba "Adicionar" da barra inferior e o botão "+" só aparecem pra quem tem essa permissão. |
+| Manual público (`/manual/:id`) | Página HTML simples servida pelo backend (fora do app) — foto/vídeo/texto de cada passo, sem login, sem edição; é o que abre quando alguém recebe o link do "Compartilhar" (item 16) |
 | Conta (login) | Login com usuário/senha, ou dados da conta logada + botão "Sair" |
 | Favoritos | Lista de todos os acessórios marcados como favoritos, de qualquer fabricante |
-| Menu lateral (☰) | Painel deslizante com link para Favoritos e a versão do app |
+| Ajuda | "Como encontrar um manual" — 3 dicas (busca, fabricante, favoritos) |
+| Menu lateral (☰) | Painel deslizante com links pra Favoritos, Ajuda e a versão do app |
 
 ## Fluxo principal
 Início → escolhe fabricante → lista de acessórios → escolhe acessório →
@@ -203,11 +278,15 @@ registrados pra quando for preciso recriar/trocar de serviço:
    verdade.
 
 ## Próximos passos
-- Definir a lista real de pessoas com acesso e a permissão
-  (`pode_adicionar`) de cada uma — hoje só existe o usuário de exemplo
-  `montador`/`1234` (senha com hash no banco, mas ainda a senha de
-  exemplo). Trocar via SQL direto no Neon (não tem tela de administração
-  ainda, ver "Fora do escopo").
+- Cadastrar os primeiros fabricantes/aparelhos de eletrodoméstico de
+  verdade (catálogo começou vazio de propósito, ver item 13).
+- Acompanhar o uso de armazenamento do Neon depois que vídeos de passo
+  começarem a ser cadastrados de verdade (ver "Backend" > vídeo dos
+  passos) — se ficar apertado, migrar pra um serviço de storage de vídeo
+  dedicado.
+- Trocar a senha do usuário de exemplo `montador`/`1234` por uma senha de
+  verdade — criar/editar login continua sendo feito direto via SQL no
+  Neon (ver "Fora do escopo").
 - Substituir os slots de imagem pelos arquivos reais (logos e fotos de
   produto), conforme `prototipo/assets/README.md`.
 - Revisar/reescrever os textos de instalação dos itens de catálogo.

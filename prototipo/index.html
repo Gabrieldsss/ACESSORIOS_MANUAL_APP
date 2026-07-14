@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>Manual do Montador - Madeirol</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="js/plataforma.js"></script>
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -13,8 +14,18 @@
     <button type="button" class="menu-btn" id="btn-menu" aria-label="Abrir menu">☰</button>
   </div>
   <div class="content">
-    <div class="section-title">Fabricantes</div>
-    <div class="fabricante-list" id="lista-fabricantes"></div>
+    <div class="segmented" id="segmented-catalogo">
+      <button type="button" id="tipo-ferragens" class="active">Ferragens</button>
+      <button type="button" id="tipo-eletro">Eletrodomésticos</button>
+    </div>
+
+    <input class="search" id="busca" type="text" placeholder="Buscar acessório por nome...">
+
+    <div class="chip-row" id="chip-fabricantes"></div>
+
+    <div class="section-title">Catálogo</div>
+    <div class="card-list" id="lista-acessorios"></div>
+    <div class="empty" id="vazio-acessorios" style="display:none;"></div>
   </div>
 
   <div class="tabbar">
@@ -32,22 +43,94 @@
 <script src="js/menu.js"></script>
 <script src="js/atualizacao.js"></script>
 <script>
-function renderFabricantes() {
-  const lista = getTodosFabricantes();
-  document.getElementById("lista-fabricantes").innerHTML = lista.map((fabricante) => {
-    const qtd = getAcessoriosPorFabricante(fabricante.id);
-    const total = qtd.catalogo.length + qtd.meus.length;
-    return `<a class="fabricante-card" style="--cor:${fabricante.cor}" href="fabricante.html?id=${fabricante.id}">
-      ${logoImg(fabricante)}
-      <div class="info">
-        <strong>${fabricante.nome}</strong>
-        <span>${total} acessório${total === 1 ? "" : "s"} cadastrado${total === 1 ? "" : "s"}</span>
-      </div>
-    </a>`;
-  }).join("") || emptyState("🏷️", "Nenhum fabricante ainda. Conecte-se à internet pra baixar o catálogo.");
+let tipoCatalogo = "ferragem"; // "ferragem" | "eletrodomestico" - qual aba do alternador
+let fabricanteSelecionado = null; // null = "Todos"
+
+function fabricantesDoTipo() {
+  return getTodosFabricantes().filter((f) => (f.tipo || "ferragem") === tipoCatalogo);
 }
 
-sincronizarCatalogo().then(renderFabricantes);
+function acessoriosDoTipo() {
+  const idsDoTipo = new Set(fabricantesDoTipo().map((f) => f.id));
+  return getTodosAcessorios().filter((a) => idsDoTipo.has(a.fabricanteId));
+}
+
+function renderChips() {
+  const fabricantes = fabricantesDoTipo();
+  const chipTodos = `<button type="button" class="chip ${fabricanteSelecionado === null ? "active" : ""}" data-fabricante="">Todos</button>`;
+  const chipsFabricantes = fabricantes.map((f) => `
+    <button type="button" class="chip ${fabricanteSelecionado === f.id ? "active" : ""}" style="--chip-cor:${f.cor}" data-fabricante="${f.id}">${f.nome}</button>
+  `).join("");
+  document.getElementById("chip-fabricantes").innerHTML = chipTodos + chipsFabricantes;
+}
+
+function cardAcessorio(acessorio) {
+  const fabricante = getFabricantePorId(acessorio.fabricanteId);
+  const origemUsuario = acessorio.origem === "usuario";
+  const badge = `<span class="origem-badge ${origemUsuario ? "usuario" : "catalogo"}">${origemUsuario ? "Meu" : "Catálogo"}</span>`;
+  return `<a class="card" href="acessorio.html?id=${acessorio.id}">
+    <div class="thumb">${thumbHtml(acessorio)}</div>
+    <div class="info">
+      <strong>${acessorio.nome}${badge}</strong>
+      <span>${categoriaIcone(acessorio.categoria)} ${fabricante ? fabricante.nome + " · " : ""}${acessorio.categoria}</span>
+    </div>
+    ${favoritoBtn(acessorio.id)}
+  </a>`;
+}
+
+function renderLista() {
+  const termo = document.getElementById("busca").value.trim().toLowerCase();
+  const todos = acessoriosDoTipo();
+  let itens = todos;
+  if (fabricanteSelecionado) itens = itens.filter((a) => a.fabricanteId === fabricanteSelecionado);
+  if (termo) itens = itens.filter((a) => a.nome.toLowerCase().includes(termo) || a.categoria.toLowerCase().includes(termo));
+
+  const lista = document.getElementById("lista-acessorios");
+  const vazio = document.getElementById("vazio-acessorios");
+  if (itens.length === 0) {
+    lista.innerHTML = "";
+    if (todos.length > 0) {
+      vazio.innerHTML = emptyState("🔍", "Nenhum item encontrado.");
+    } else if (tipoCatalogo === "eletrodomestico") {
+      vazio.innerHTML = emptyState("🔌", "Nenhum eletrodoméstico cadastrado ainda. Toque em \"Adicionar\" para criar o primeiro fabricante.");
+    } else {
+      vazio.innerHTML = emptyState("🏷️", "Nenhum acessório ainda. Conecte-se à internet pra baixar o catálogo.");
+    }
+    vazio.style.display = "block";
+  } else {
+    vazio.style.display = "none";
+    lista.innerHTML = itens.map(cardAcessorio).join("");
+  }
+}
+
+function selecionarTipoCatalogo(tipo) {
+  tipoCatalogo = tipo;
+  fabricanteSelecionado = null;
+  document.getElementById("tipo-ferragens").classList.toggle("active", tipo === "ferragem");
+  document.getElementById("tipo-eletro").classList.toggle("active", tipo === "eletrodomestico");
+  document.getElementById("busca").placeholder = tipo === "eletrodomestico"
+    ? "Buscar eletrodoméstico por nome..."
+    : "Buscar acessório por nome...";
+  const tabAdicionar = document.getElementById("tab-adicionar");
+  if (tabAdicionar) tabAdicionar.href = `adicionar.html?tipo=${tipo}`;
+  renderChips();
+  renderLista();
+}
+
+document.getElementById("busca").addEventListener("input", renderLista);
+document.getElementById("chip-fabricantes").addEventListener("click", (e) => {
+  const chip = e.target.closest(".chip");
+  if (!chip) return;
+  fabricanteSelecionado = chip.dataset.fabricante || null;
+  renderChips();
+  renderLista();
+});
+document.getElementById("tipo-ferragens").addEventListener("click", () => selecionarTipoCatalogo("ferragem"));
+document.getElementById("tipo-eletro").addEventListener("click", () => selecionarTipoCatalogo("eletrodomestico"));
+
+sincronizarCatalogo().then(() => {
+  selecionarTipoCatalogo("ferragem");
+});
 </script>
 </body>
 </html>

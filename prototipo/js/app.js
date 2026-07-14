@@ -27,7 +27,10 @@ function thumbHtml(acessorio) {
   if (acessorio.imagemBase64) {
     return `<img src="${acessorio.imagemBase64}" alt="${acessorio.nome}">`;
   }
-  return assetImg(acessorio.imagem, acessorio.nome);
+  if (acessorio.imagem) {
+    return assetImg(acessorio.imagem, acessorio.nome);
+  }
+  return `<span>🖼️</span>`;
 }
 
 function stepImageHtml(passo) {
@@ -40,6 +43,11 @@ function stepImageHtml(passo) {
   return `<span>🖼️</span>`;
 }
 
+function stepVideoHtml(passo) {
+  if (!passo.videoBase64) return "";
+  return `<video class="step-video" src="${passo.videoBase64}" controls preload="none"></video>`;
+}
+
 function categoriaIcone(categoria) {
   const c = (categoria || "").toLowerCase();
   if (c.includes("dobradiç") || c.includes("dobradic")) return "🚪";
@@ -48,6 +56,19 @@ function categoriaIcone(categoria) {
   if (c.includes("pé") || c.includes("nivelamento")) return "🦶";
   if (c.includes("elevaç") || c.includes("elevac")) return "⬆️";
   return "🔧";
+}
+
+// Compartilha um manual como link público (GET /manual/:id no backend,
+// funciona pra quem não tem o app instalado). Usa o share nativo do
+// aparelho quando disponível; senão abre o WhatsApp com o texto pronto.
+function compartilharManual(acessorio) {
+  const url = `${API_BASE_URL}/manual/${acessorio.id}`;
+  const texto = `Manual: ${acessorio.nome}\n${url}`;
+  if (navigator.share) {
+    navigator.share({ title: acessorio.nome, text: texto, url }).catch(() => {});
+  } else {
+    window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, "_blank");
+  }
 }
 
 function emptyState(icone, texto) {

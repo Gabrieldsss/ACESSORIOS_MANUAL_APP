@@ -689,9 +689,275 @@ HISTORICO DE ALTERACOES
 - Falta publicar o backend de verdade (Render) e trocar API_BASE_URL -
   ver PENDENCIAS abaixo.
 
+[2026-07-13] Tela cheia em tablets, busca global, catalogo em 1o lugar, ajuda e Administracao
+- Usuario testou o app instalado e reportou que o tamanho nao ficava
+  compativel com tablets; pediu tambem uma dica no menu lateral sobre
+  como achar um manual, busca por nome do item na tela Inicio (nao mais
+  so por fabricante), o fabricante virando "segunda importancia" (o
+  catalogo de acessorios em primeiro lugar), e por fim uma tela de
+  Administracao pra gerenciar usuarios/permissoes e gerar logins.
+- TELA CHEIA EM TABLET: causa era a regra de CSS depender so da largura
+  da tela (@media max-width:480px), que nunca cobria tablet. Corrigido
+  detectando se o app esta rodando de verdade dentro do Capacitor
+  (window.Capacitor.isNativePlatform()), independente do tamanho do
+  aparelho - novo prototipo/js/plataforma.js marca <html class="app-nativo">
+  bem cedo (antes do CSS aplicar, pra nao "piscar" a moldura), incluido
+  como primeiro script no <head> de toda pagina. css/style.css ganhou a
+  regra html.app-nativo .phone (tela cheia, sem borda/moldura, com teto
+  de largura de 600px pra nao esticar demais o conteudo em tablet -
+  como o fundo da pagina usa a mesma cor do conteudo, nao aparece como
+  caixa). A regra antiga por largura continua valendo so pra quando
+  alguem testa o prototipo direto num navegador de celular (sem
+  Capacitor). Testado com Playwright simulando window.Capacitor em
+  viewport de tablet (800x1200) e celular (360x780), e um desktop normal
+  sem Capacitor pra confirmar que o preview de desenvolvimento nao mudou.
+- BUSCA GLOBAL + CATALOGO EM 1o LUGAR (index.html reescrito): a tela
+  Inicio nao lista mais fabricantes como conteudo principal - agora e
+  uma lista unica com TODOS os acessorios (getTodosAcessorios()), com uma
+  barra de busca (nome/categoria) e uma fileira de chips de fabricante
+  (Blum/Hafele/Hettich + "Todos") pra filtrar rapido, sem abrir tela
+  separada. Busca e chip funcionam junto (E logico). Cada card mostra o
+  nome do fabricante como legenda. fabricante.html continua existindo
+  (acessivel pela seta "voltar" da tela de detalhe do acessorio, ou por
+  "editar fabricante"), so deixou de ser o ponto de entrada principal.
+  Classes CSS .fabricante-list/.fabricante-card ficaram sem uso em
+  nenhuma pagina - removidas de css/style.css.
+- BUG CORRIGIDO: acessorio salvo sem nenhuma foto mostrava a palavra
+  "undefined" na miniatura (thumbHtml chamava assetImg(acessorio.imagem, ...)
+  mesmo com imagem undefined). prototipo/js/app.js: thumbHtml() ganhou a
+  mesma guarda que stepImageHtml() ja tinha - sem imagemBase64 E sem
+  imagem, mostra um icone generico 🖼️ em vez de tentar carregar
+  "undefined" como arquivo.
+- TELA DE AJUDA (prototipo/ajuda.html, nova): "Como encontrar um manual",
+  3 dicas (busca por nome, navegar por fabricante, favoritos) reaproveitando
+  o estilo .step-list/.step-row ja usado no passo a passo. Link novo no
+  menu lateral (js/menu.js); aproveitei pra tirar um texto desatualizado
+  do menu que ainda dizia "Protótipo — sem backend" (nao e mais verdade).
+- ADMINISTRACAO (usuarios/permissoes) - pergunta ao usuario sobre quem
+  deveria conseguir gerenciar login de outras pessoas: escolhida uma
+  permissao NOVA e separada (is_admin), diferente de pode_adicionar (que
+  so controla editar catalogo) - assim da pra ter gente que edita
+  fabricante/acessorio sem poder criar/apagar conta de ninguem. Escopo
+  desta rodada, tambem perguntado ao usuario: so LISTAR e CRIAR login
+  novo (editar permissao, redefinir senha e remover ficam pra depois).
+    - backend/schema.sql: coluna is_admin em usuarios, com
+      "ALTER TABLE ... ADD COLUMN IF NOT EXISTS" (a tabela usuarios ja
+      existia em producao desde 12/07, entao so o CREATE TABLE IF NOT
+      EXISTS nao bastaria - o ALTER roda toda vez que o servidor sobe e
+      e seguro, so aplica se a coluna ainda nao existir).
+    - backend/auth.js: gerarToken() inclui isAdmin no token; novo
+      middleware exigirAdmin (igual exigirPermissaoAdicionar, so que
+      checa isAdmin).
+    - backend/server.js: POST /auth/login devolve isAdmin tambem; novas
+      rotas GET /usuarios (lista sem senha_hash) e POST /usuarios (cria
+      login com senha em hash), as duas atras de exigirAdmin; usuario
+      duplicado devolve 400 com mensagem amigavel em vez de erro 500 cru.
+    - prototipo/js/auth.js: nova funcao isAdmin() (le do que foi guardado
+      no login, igual podeAdicionar()); nova exigirAdmin(); fazerLogin()
+      passou a guardar tambem o campo isAdmin no localStorage.
+    - prototipo/administracao.html (nova): lista as contas existentes
+      (usuario, nome, selos "Admin"/"Edita catalogo") e formulario de
+      criar login (usuario, senha com mostrar/ocultar, nome, checkboxes
+      podeAdicionar e isAdmin). Exige exigirAdmin() pra renderizar.
+    - prototipo/js/menu.js: link "🛠️ Administração" no menu, só aparece
+      se isAdmin() - com guarda "typeof isAdmin === 'function'" porque
+      passo.html nao inclui js/auth.js (menu.js e a mesma injeção em
+      toda pagina, tinha que sobreviver a essa pagina especifica).
+    - BUG achado e corrigido durante o teste: apiGet() em
+      prototipo/js/api.js nunca mandava o header Authorization (so tinha
+      sido usado ate agora pro /catalogo, que e publico) - GET /usuarios
+      dava 401 "Login necessario" mesmo logado. Corrigido pra apiGet()
+      usar cabecalhosComToken() igual os outros verbos.
+    - Testado local (backend rodando na maquina, apontando pro MESMO
+      banco de producao Neon) com Playwright: deslogado tentando abrir
+      administracao.html redireciona pro login; montador (promovido a
+      admin via UPDATE direto no banco) ve o link e a lista; cria um
+      login de teste, aparece na lista; tentar criar duplicado da erro
+      amigavel; logando com a conta nova (podeAdicionar mas NAO admin)
+      confirma que ela ve a aba Adicionar mas NAO ve o link Administração
+      nem consegue abrir administracao.html direto (redireciona). Conta
+      de teste apagada do banco depois via SQL (nao tem DELETE /usuarios
+      ainda).
+    - montador foi promovido a admin em producao (UPDATE usuarios SET
+      is_admin=TRUE) pra nao ficar sem acesso a propria tela nova.
+- Durante os testes desta rodada, encontrado (e corrigido) dado orfao no
+  banco de producao: faltavam 2 itens do catalogo original (Corrediça
+  Tandem, Sistema Quadro) e sobrava um acessorio de teste ("Teste", sem
+  foto, cadastrado em Blum) - provavelmente de quando o usuario testou o
+  app pelo navegador local apontando pra producao. Restaurado rodando
+  "npm run seed" de novo (so insere o que falta, ON CONFLICT DO NOTHING)
+  e apagado o item "Teste" via DELETE /acessorios. Banco de producao
+  confirmado com os 3 fabricantes + 6 acessorios originais, sem sobras.
+- ESCOPO.md bastante reescrito: funcionalidade 1 (Inicio = catalogo,
+  fabricante secundario), nova funcionalidade 2 (tela Fabricante,
+  renumerado o resto), novas funcionalidades 12 (Ajuda) e 13
+  (Administração), item 9 (menu lateral) com os links novos, item 11
+  menciona a correcao de tablet, secao Backend com as rotas /usuarios,
+  "Fora do escopo" trocou "tela de administracao" (agora existe, parcial)
+  por "editar/redefinir senha/remover login" (o que ainda falta),
+  tabela de Telas atualizada (Inicio, Ajuda, Administração), Proximos
+  passos atualizado.
+- Nada disso foi comitado ainda (build final do APK tambem nao rodou pra
+  essa rodada) - aguardando o usuario revisar visualmente (foi publicado
+  um Artifact com screenshots + servidor local rodando) antes de fechar.
+
+[2026-07-13] Administracao (usuarios/permissoes) desfeita a pedido do usuario
+- Depois de ver o resultado (servidor local + Artifact), usuario pediu pra
+  desfazer a autenticacao de administrador e deixar so a antiga (login +
+  pode_adicionar). Revertido tudo que a rodada anterior tinha adicionado:
+    - backend/auth.js: gerarToken() nao inclui mais isAdmin; middleware
+      exigirAdmin removido.
+    - backend/server.js: POST /auth/login nao devolve mais isAdmin; rotas
+      GET/POST /usuarios removidas.
+    - backend/schema.sql: coluna is_admin tirada do CREATE TABLE/ALTER
+      TABLE (a coluna que ja existe no banco de producao fica orfa e sem
+      uso - inofensiva, nao foi dropada).
+    - prototipo/js/auth.js: funcoes isAdmin()/exigirAdmin() removidas;
+      fazerLogin() nao guarda mais o campo isAdmin no localStorage.
+    - prototipo/js/menu.js: link "🛠️ Administração" removido do menu.
+    - prototipo/administracao.html: apagado.
+  A correcao do bug real achado durante aquela rodada (apiGet() sem
+  header Authorization) FICOU (nao fazia parte do que foi desfeito - e
+  usado por outras chamadas autenticadas tambem). ESCOPO.md atualizado:
+  item 13 (Administracao) e a linha de "Administração" no menu (item 9)
+  removidos, secao Backend sem a rota /usuarios, "Fora do escopo" e
+  "Proximos passos" ajustados pra refletir que a tela nao existe mais.
+
+[2026-07-14] Segundo catalogo: aba de Eletrodomesticos na tela Inicio
+- Usuario pediu uma aba pra manuais de eletrodomesticos "igual a essa das
+  ferragens". Perguntado onde deveria aparecer na navegacao (nova aba na
+  barra inferior / alternador dentro do Inicio / link no menu lateral) e
+  se ja existiam fabricantes/manuais reais pra cadastrar de saida -
+  usuario escolheu alternador dentro do Inicio e comecar vazio (mesmo
+  padrao de pergunta feito antes de construir o backend).
+- Modelo de dados: fabricantes ganhou uma coluna tipo ('ferragem' ou
+  'eletrodomestico', default 'ferragem') em vez de criar tabelas
+  separadas - um acessorio "herda" o tipo do fabricante dele, entao nao
+  precisou mexer na tabela acessorios. backend/schema.sql: coluna no
+  CREATE TABLE + ALTER TABLE ADD COLUMN IF NOT EXISTS (banco de producao
+  ja tinha a tabela fabricantes; os 3 originais Blum/Hafele/Hettich caem
+  no default 'ferragem', que e o que ja eram - confirmado rodando o
+  backend local contra o banco de producao e conferindo via /catalogo).
+- backend/server.js: mapFabricante() devolve tipo; POST/PUT /fabricantes
+  aceitam e validam tipo (so aceita 'ferragem'/'eletrodomestico', cai pro
+  default/valor antigo se vier invalido ou ausente - client antigo sem
+  esse campo continua funcionando).
+- prototipo/index.html: novo alternador .segmented ("Ferragens" /
+  "Eletrodomesticos") acima da busca. tipoCatalogo guarda a aba ativa;
+  fabricantesDoTipo()/acessoriosDoTipo() filtram chips e lista pelo tipo
+  do fabricante. Trocar de aba zera o filtro de fabricante selecionado,
+  troca o placeholder da busca ("Buscar eletrodoméstico por nome...") e
+  atualiza o href da aba "Adicionar" da barra inferior pra
+  adicionar.html?tipo=<tipo>, pra levar o contexto adiante. Estado vazio
+  da aba Eletrodomesticos tem texto proprio guiando pra "Adicionar".
+- prototipo/adicionar.html: aba "Fabricante" ganhou um campo Tipo
+  (segmented Ferragem/Eletrodomestico, obrigatorio, enviado no
+  criar/editar fabricante). O select de fabricante da aba "Acessorio"
+  passou a ser montado com dois <optgroup> ("Ferragens"/
+  "Eletrodomesticos"), pra nao misturar os dois catalogos numa lista so.
+  Le o ?tipo= da URL (mandado pelo Inicio) pra pre-selecionar o tipo no
+  formulario de Fabricante; se o contexto for eletrodomestico e ainda
+  nao existir NENHUM fabricante desse tipo, a tela abre direto na aba
+  "Fabricante" em vez de "Acessorio" (guia o usuario a criar o fabricante
+  primeiro, já que o catalogo comecou vazio).
+- Testado local (backend na maquina, banco de producao) com Playwright:
+  aba Ferragens mostra os 3 fabricantes de sempre; aba Eletrodomesticos
+  comeca vazia com o texto/placeholder certos; tocar em Adicionar estando
+  nela leva direto pra aba Fabricante com Eletrodomestico pre-selecionado
+  (href confirmado adicionar.html?tipo=eletrodomestico); criado fabricante
+  de teste "Electrolux", depois um aparelho "Geladeira Frost Free" nele;
+  de volta ao Inicio, o item aparece SO na aba Eletrodomesticos (nao
+  aparece em Ferragens), com o chip "Electrolux" certo. Zero erro de
+  console (so 404 esperado de logo/foto que nao existe, comportamento
+  normal do slot-com-fallback). Fabricante e aparelho de teste apagados
+  do banco de producao depois (DELETE /fabricantes com cascade).
+- ESCOPO.md atualizado: objetivo menciona os dois catalogos, item 1
+  menciona o alternador, nova funcionalidade 13 (Eletrodomesticos),
+  secao Backend documenta a coluna tipo, tabela de Telas e Proximos
+  passos atualizados.
+- Nada disso foi comitado ainda.
+
+[2026-07-14] Avaliacao do passo a passo, video nos passos, compartilhar manual
+- Usuario pediu 3 ideias que eu tinha sugerido (a partir de "me de dicas do
+  que mais adicionar"): sistema de avaliacao (util/nao util), upload de
+  video nos passos, e compartilhamento de manual via link ou WhatsApp.
+- Perguntado antes de mexer: video deveria ser link (YouTube/Drive) ou
+  upload de verdade? E o compartilhamento deveria funcionar so como texto
+  ou como link publico de verdade (funciona sem o app instalado)? Usuario
+  escolheu as duas opcoes mais "caras": upload de video de verdade e link
+  publico de verdade.
+- AVALIACAO: acessorios ganhou avaliacoes_util/avaliacoes_nao_util
+  (INTEGER, default 0, ALTER TABLE ADD COLUMN IF NOT EXISTS pro banco de
+  producao). Rota nova POST /acessorios/:id/avaliacao (publica, sem
+  login, body {util: true|false}, incrementa a coluna certa). No cliente:
+  data.js ganhou avaliarAcessorio()/jaAvaliou() (voto controlado por
+  localStorage pra nao deixar votar 2x no mesmo aparelho - nao e a prova
+  de burla, mas suficiente pra app interno). passo.html mostra a pergunta
+  "Chegou ao fim! Essa instrucao te ajudou?" com botoes 👍/👎 so no
+  ultimo passo; acessorio.html mostra a contagem agregada so pra quem tem
+  podeAdicionar (serve de sinal de qual conteudo precisa ser reescrito).
+- VIDEO NOS PASSOS: passos ganhou coluna video_base64 (mesmo esquema das
+  fotos - upload direto vira base64 e vai pro Postgres, SEM contratar
+  servico de storage de video separado, ja que o usuario nao pediu isso
+  explicitamente). Limite de 15MB por video no cliente
+  (VIDEO_TAMANHO_MAXIMO em adicionar.html) e limite do corpo da
+  requisicao no backend subiu de 15mb pra 60mb (express.json). Cada passo
+  no formulario "Adicionar" ganhou um campo de upload de video opcional
+  (com preview <video> e botao de remover). passo.html renderiza o video
+  do passo (se tiver) acima do texto. AVISO deixado no ESCOPO.md: video
+  pesa muito mais que foto - se o uso crescer, o armazenamento gratuito
+  do Neon pode esgotar rapido, e a solucao correta nesse caso seria migrar
+  pra um servico de storage de video de verdade (fora do escopo agora).
+- COMPARTILHAR MANUAL: rota nova GET /manual/:id no backend (publica, sem
+  login) que gera uma pagina HTML autonoma (CSS inline, sem depender do
+  app) mostrando fabricante, nome, categoria, foto de capa e os passos
+  (com foto/video/texto). Como as imagens do catalogo original ficam em
+  prototipo/assets/ (dentro do APK, nao acessiveis de fora), o backend
+  passou a servir esses arquivos tambem via novo app.use("/assets", ...)
+  (express.static apontando pra ../prototipo/assets a partir de backend/
+  - o mesmo repo, Render clona tudo mesmo com Root Directory=backend).
+  BUG achado e corrigido no teste: a coluna "imagem" ja guarda o caminho
+  com prefixo "assets/..." (ex: "assets/produtos/blum-....jpg"), entao a
+  primeira versao de imagemHtml() montava "/assets/assets/produtos/..."
+  (duplicado) - corrigido pra so `/${imagem}`. Botao "📤 Compartilhar" em
+  acessorio.html: monta a URL publica + texto, usa navigator.share() se
+  disponivel, senao abre https://wa.me/?text=... numa aba nova. Como o
+  HTML da pagina publica e gerado a partir de dado que qualquer usuario
+  com permissao pode ter cadastrado (nome, categoria, texto dos passos),
+  e essa pagina fica acessivel pra qualquer um na internet sem login,
+  todos os campos passam por um escapeHtml() antes de ir pro HTML (evita
+  um XSS armazenado exposto publicamente).
+- Testado local (backend + servidor estatico apontando pro banco de
+  producao) com Playwright: criado acessorio de teste com foto+video num
+  passo, preview do video aparece no formulario, video aparece no passo a
+  passo, avaliar no ultimo passo mostra "obrigado" e nao deixa votar de
+  novo (nem apos reload), contagem atualiza na tela do acessorio pra quem
+  tem permissao, compartilhar abre o WhatsApp com o link certo, GET
+  /manual/:id responde 200 com o video embutido. Unico erro de console
+  foi um 404 esperado (item de teste sem foto de capa, comportamento
+  normal do slot-com-fallback). Acessorio de teste apagado do banco de
+  producao depois.
+- ESCOPO.md atualizado: novas funcionalidades 14 (video), 15 (avaliacao),
+  16 (compartilhar), secao Backend com as rotas novas e o aviso sobre
+  armazenamento de video no Neon, tabela de Telas e Proximos passos
+  atualizados.
+- Nada disso foi comitado ainda.
+
 ===========================================================================
 PENDENCIAS / PROXIMOS PASSOS
 ===========================================================================
+- Comitar/enviar tudo das rodadas de 2026-07-13/14 (tablet, busca,
+  catalogo em 1o lugar, ajuda, bugfix do apiGet, catalogo de
+  eletrodomesticos, avaliacao/video/compartilhar) e re-publicar o backend
+  no Render (o Render ainda esta com o server.js de antes de 2026-07-12 -
+  so falta o deploy do codigo novo).
+- Acompanhar o uso de armazenamento do Neon (free tier) depois que
+  videos de passo comecarem a ser cadastrados de verdade - se ficar
+  apertado, migrar pra um servico de storage de video dedicado.
+- Gerar um novo APK com tudo isso (o ManualDoMontador-v1.1.1.apk gerado
+  antes so tinha a correcao de tablet - ficou pra tras, nao foi publicado
+  como Release ainda porque o usuario pediu pra continuar reformulando
+  antes de fechar a versao) e publicar como Release nova no GitHub.
 - Backend publicado no Render (https://acessorios-manual-app.onrender.com,
   banco Neon) em 2026-07-12. Root Directory precisou ser "backend"
   (deploy falhou antes disso com "Missing script: start", porque rodava
@@ -715,6 +981,7 @@ PENDENCIAS / PROXIMOS PASSOS
   sao genericos, escritos como exemplo).
 - Validar as telas com o usuario final (montador) antes de decidir a stack
   definitiva para gerar o app de verdade.
-- Definir a lista real de usuarios/senhas e permissao (pode_adicionar) de
-  cada um (hoje so tem o usuario de exemplo "montador"/"1234" no banco) -
-  trocar via SQL direto no Neon ate existir uma tela de administracao.
+- Definir a lista real de usuarios/senhas e permissao de cada um (hoje so
+  tem o usuario de exemplo "montador"/"1234" no banco) - criar/editar
+  login continua sendo so via SQL direto no Neon (ver ESCOPO.md > Fora
+  do escopo).

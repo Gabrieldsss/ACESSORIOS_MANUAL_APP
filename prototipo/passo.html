@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>Passo a Passo</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="js/plataforma.js"></script>
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -49,18 +50,43 @@ function render() {
   document.getElementById("titulo-topo").textContent = acessorio.nome;
 
   if (fabricante) conteudo.style.setProperty("--cor", fabricante.cor);
+  const ultimoPasso = step === total - 1;
   conteudo.innerHTML = `
     <div class="progress">Passo ${step + 1} de ${total}</div>
     <div class="progress-bar"><div style="width:${((step + 1) / total) * 100}%"></div></div>
     <div class="step-image">${stepImageHtml(passo)}</div>
+    ${stepVideoHtml(passo)}
     <div class="step-text">${passo.texto}</div>
     <div class="nav-buttons">
       <button class="prev" ${step === 0 ? "disabled" : ""} onclick="ir(${step - 1})">← Anterior</button>
-      ${step === total - 1
+      ${ultimoPasso
         ? `<button class="next" onclick="window.location.href='acessorio.html?id=${id}'">Concluir ✓</button>`
         : `<button class="next" onclick="ir(${step + 1})">Próximo →</button>`}
     </div>
+    ${ultimoPasso ? `<div id="avaliacao">${avaliacaoHtml()}</div>` : ""}
   `;
+}
+
+function avaliacaoHtml() {
+  if (jaAvaliou(id)) {
+    return `<div class="avaliacao-obrigado">Obrigado pelo feedback! 🙌</div>`;
+  }
+  return `
+    <div class="avaliacao-pergunta">Chegou ao fim! Essa instrução te ajudou?</div>
+    <div class="avaliacao-botoes">
+      <button type="button" onclick="votar(true)">👍 Sim</button>
+      <button type="button" onclick="votar(false)">👎 Não</button>
+    </div>
+  `;
+}
+
+async function votar(util) {
+  try {
+    await avaliarAcessorio(id, util);
+    document.getElementById("avaliacao").innerHTML = avaliacaoHtml();
+  } catch (e) {
+    // sem internet ou erro no servidor - feedback e "de bonus", nao trava a tela
+  }
 }
 
 function ir(novoStep) {

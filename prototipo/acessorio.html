@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>Detalhe do Acessório</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="js/plataforma.js"></script>
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -53,8 +54,10 @@ function iniciar() {
     <div class="meta">
       <h2>${acessorio.nome}</h2>
       <div class="cat">${categoriaIcone(acessorio.categoria)} ${acessorio.categoria} · ${acessorio.passos.length} passos</div>
+      ${podeGerenciar ? `<div class="avaliacao-resumo">👍 ${acessorio.avaliacoesUtil || 0} · 👎 ${acessorio.avaliacoesNaoUtil || 0} avaliações</div>` : ""}
     </div>
     <a class="btn-primary" href="passo.html?id=${acessorio.id}&step=0">Ver instalação</a>
+    <button type="button" class="btn-secondary" id="btn-compartilhar">📤 Compartilhar</button>
 
     <div class="section-title">Passo a passo</div>
     <div class="step-list">
@@ -73,6 +76,8 @@ function iniciar() {
       <button class="btn-danger" id="btn-remover">Remover acessório</button>
     ` : ""}
   `;
+
+  document.getElementById("btn-compartilhar").addEventListener("click", () => compartilharManual(acessorio));
 
   if (podeGerenciar) {
     document.getElementById("btn-remover").addEventListener("click", async () => {
