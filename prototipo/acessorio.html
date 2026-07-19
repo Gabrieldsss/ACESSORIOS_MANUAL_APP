@@ -38,11 +38,35 @@ function iniciar() {
     return;
   }
 
+  registrarVisto(acessorio.id);
+
   const fabricante = getFabricantePorId(acessorio.fabricanteId);
   document.getElementById("link-voltar").href = `fabricante.html?id=${acessorio.fabricanteId}`;
   document.getElementById("titulo-topo").textContent = acessorio.nome;
 
   const podeGerenciar = podeAdicionar();
+  const manualTipo = acessorio.manualTipo || "passos";
+
+  const metaCat = manualTipo === "passos"
+    ? `${categoriaIcone(acessorio.categoria)} ${acessorio.categoria} · ${acessorio.passos.length} passos`
+    : `${categoriaIcone(acessorio.categoria)} ${acessorio.categoria} · Manual em ${manualTipo === "pdf" ? "PDF" : "vídeo"}`;
+
+  const acaoPrincipalHtml = manualTipo === "passos"
+    ? `<a class="btn-primary" href="passo.html?id=${acessorio.id}&step=0">Ver instalação</a>`
+    : `<button type="button" class="btn-primary" id="btn-ver-manual">${manualTipo === "pdf" ? "📄 Ver manual em PDF" : "▶️ Ver vídeo da instalação"}</button>
+       <div id="area-manual" style="display:none;"></div>`;
+
+  const stepListHtml = manualTipo === "passos" ? `
+    <div class="section-title">Passo a passo</div>
+    <div class="step-list">
+      ${acessorio.passos.map((p, i) => `
+        <div class="step-row">
+          <div class="num">${i + 1}</div>
+          <div>${p.texto}</div>
+        </div>
+      `).join("")}
+    </div>
+  ` : "";
 
   conteudo.style.setProperty("--cor", fabricante.cor);
   conteudo.innerHTML = `
@@ -53,21 +77,14 @@ function iniciar() {
     <div class="brand-badge">${logoImg(fabricante)} ${fabricante.nome}</div>
     <div class="meta">
       <h2>${acessorio.nome}</h2>
-      <div class="cat">${categoriaIcone(acessorio.categoria)} ${acessorio.categoria} · ${acessorio.passos.length} passos</div>
+      <div class="cat">${metaCat}</div>
       ${podeGerenciar ? `<div class="avaliacao-resumo">👍 ${acessorio.avaliacoesUtil || 0} · 👎 ${acessorio.avaliacoesNaoUtil || 0} avaliações</div>` : ""}
     </div>
-    <a class="btn-primary" href="passo.html?id=${acessorio.id}&step=0">Ver instalação</a>
+    ${acessorio.especificacoes ? `<div class="especificacoes-box">${acessorio.especificacoes}</div>` : ""}
+    ${acaoPrincipalHtml}
     <button type="button" class="btn-secondary" id="btn-compartilhar">📤 Compartilhar</button>
 
-    <div class="section-title">Passo a passo</div>
-    <div class="step-list">
-      ${acessorio.passos.map((p, i) => `
-        <div class="step-row">
-          <div class="num">${i + 1}</div>
-          <div>${p.texto}</div>
-        </div>
-      `).join("")}
-    </div>
+    ${stepListHtml}
 
     ${podeGerenciar ? `
       <div style="height:16px"></div>
@@ -78,6 +95,22 @@ function iniciar() {
   `;
 
   document.getElementById("btn-compartilhar").addEventListener("click", () => compartilharManual(acessorio));
+
+  if (manualTipo !== "passos") {
+    document.getElementById("btn-ver-manual").addEventListener("click", () => {
+      const area = document.getElementById("area-manual");
+      const abrindo = area.style.display === "none";
+      area.style.display = abrindo ? "block" : "none";
+      if (abrindo && !area.innerHTML) {
+        area.innerHTML = manualTipo === "pdf"
+          ? `<div class="manual-pdf-box">
+               <iframe src="${acessorio.manualPdfBase64}"></iframe>
+               <a class="btn-secondary" href="${acessorio.manualPdfBase64}" download="${acessorio.nome}.pdf">⬇️ Baixar PDF</a>
+             </div>`
+          : `<video class="manual-video-box" src="${acessorio.manualVideoBase64}" controls></video>`;
+      }
+    });
+  }
 
   if (podeGerenciar) {
     document.getElementById("btn-remover").addEventListener("click", async () => {

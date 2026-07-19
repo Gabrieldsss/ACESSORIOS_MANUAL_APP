@@ -121,3 +121,21 @@ function alternarFavorito(id) {
   localStorage.setItem("favoritos", JSON.stringify(lista));
   return lista.includes(id);
 }
+
+// ---------------------------------------------------------------------
+// Vistos recentemente: mesma ideia de favoritos - só local, nunca vai
+// pro backend. Guarda os ids na ordem de visita (mais recente primeiro),
+// limitado a VISTOS_MAXIMO itens.
+// ---------------------------------------------------------------------
+const VISTOS_MAXIMO = 8;
+
+function registrarVisto(id) {
+  const lista = JSON.parse(localStorage.getItem("vistosRecentemente") || "[]").filter((v) => v !== id);
+  lista.unshift(id);
+  localStorage.setItem("vistosRecentemente", JSON.stringify(lista.slice(0, VISTOS_MAXIMO)));
+}
+
+function getVistosRecentemente() {
+  const ids = JSON.parse(localStorage.getItem("vistosRecentemente") || "[]");
+  return ids.map(getAcessorioPorId).filter(Boolean);
+}

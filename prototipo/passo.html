@@ -43,6 +43,10 @@ function render() {
     return;
   }
   const total = acessorio.passos.length;
+  if (total === 0) {
+    conteudo.innerHTML = emptyState("📄", "Esse acessório não tem passo a passo cadastrado — o manual dele é em PDF ou vídeo. Volte e toque no botão de manual na tela anterior.");
+    return;
+  }
   if (step < 0) step = 0;
   if (step > total - 1) step = total - 1;
   const passo = acessorio.passos[step];

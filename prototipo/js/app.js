@@ -71,6 +71,32 @@ function compartilharManual(acessorio) {
   }
 }
 
+// Mostra a imagem inteira, sem corte, numa tela cheia por cima do resto -
+// as fotos do manual (capa do acessório, foto do passo) aparecem
+// recortadas (object-fit:cover) pra caber num quadrado/retângulo fixo no
+// layout; isso deixa ver a foto original completa quando ela não bate
+// exatamente com essa proporção. Toque em qualquer lugar pra fechar.
+function abrirImagemCheia(src, alt) {
+  let overlay = document.getElementById("lightbox-imagem");
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.id = "lightbox-imagem";
+    overlay.className = "lightbox-imagem";
+    overlay.innerHTML = `<img>`;
+    overlay.addEventListener("click", () => overlay.classList.remove("aberto"));
+    document.body.appendChild(overlay);
+  }
+  overlay.querySelector("img").src = src;
+  overlay.querySelector("img").alt = alt || "";
+  overlay.classList.add("aberto");
+}
+
+document.addEventListener("click", (e) => {
+  const img = e.target.closest(".cover img, .step-image img");
+  if (!img) return;
+  abrirImagemCheia(img.currentSrc || img.src, img.alt);
+});
+
 function emptyState(icone, texto) {
   return `<div class="empty"><div class="empty-icon">${icone}</div><div>${texto}</div></div>`;
 }

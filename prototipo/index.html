@@ -21,6 +21,11 @@
 
     <input class="search" id="busca" type="text" placeholder="Buscar acessório por nome...">
 
+    <div id="secao-vistos" style="display:none;">
+      <div class="section-title">Vistos recentemente</div>
+      <div class="recent-row" id="lista-vistos"></div>
+    </div>
+
     <div class="chip-row" id="chip-fabricantes"></div>
 
     <div class="section-title">Catálogo</div>
@@ -78,6 +83,20 @@ function cardAcessorio(acessorio) {
   </a>`;
 }
 
+function cardVisto(acessorio) {
+  return `<a class="recent-card" href="acessorio.html?id=${acessorio.id}">
+    <div class="thumb">${thumbHtml(acessorio)}</div>
+    <span>${acessorio.nome}</span>
+  </a>`;
+}
+
+function renderVistos() {
+  const idsDoTipo = new Set(fabricantesDoTipo().map((f) => f.id));
+  const vistos = getVistosRecentemente().filter((a) => idsDoTipo.has(a.fabricanteId));
+  document.getElementById("secao-vistos").style.display = vistos.length ? "block" : "none";
+  document.getElementById("lista-vistos").innerHTML = vistos.map(cardVisto).join("");
+}
+
 function renderLista() {
   const termo = document.getElementById("busca").value.trim().toLowerCase();
   const todos = acessoriosDoTipo();
@@ -114,6 +133,7 @@ function selecionarTipoCatalogo(tipo) {
   const tabAdicionar = document.getElementById("tab-adicionar");
   if (tabAdicionar) tabAdicionar.href = `adicionar.html?tipo=${tipo}`;
   renderChips();
+  renderVistos();
   renderLista();
 }
 

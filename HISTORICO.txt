@@ -1032,15 +1032,319 @@ HISTORICO DE ALTERACOES
   aparelhos ficam como rascunho na pasta de pesquisa pra quando alguem for
   cadastrar de verdade).
 
+[2026-07-16] Vistos recentemente, QR Code do manual, site do fabricante
+- Usuario pediu sugestoes de novas ideias; escolheu 3 pra implementar:
+  "vistos recentemente" no Inicio, opcao de gerar QR Code do manual, e
+  link pro site oficial do fabricante.
+- VISTOS RECENTEMENTE: mesma filosofia de favoritos - 100% local
+  (localStorage "vistosRecentemente", lista de ids na ordem de visita,
+  limite de 8). prototipo/js/data.js ganhou registrarVisto()/
+  getVistosRecentemente(); acessorio.html chama registrarVisto() ao
+  abrir a tela de detalhe. Na tela Inicio, nova fileira horizontal
+  (.recent-row, cards compactos 84x84) logo abaixo da busca, so aparece
+  se tiver pelo menos 1 item visto QUE PERTENCA a aba ativa do
+  alternador (Ferragens/Eletrodomesticos) - filtra pelo fabricanteId do
+  item, igual o resto da tela ja faz.
+- QR CODE: adicionada a dependencia "qrcode" no backend (pacote Node,
+  sem infra extra). Nova rota publica GET /manual/:id/qrcode.png que
+  gera um PNG na hora (QRCode.toFileStream, 300x300) apontando pro
+  MESMO link publico usado no "Compartilhar" (GET /manual/:id) -
+  reaproveita a pagina publica que ja existia. Precisou de
+  app.set("trust proxy", 1) no server.js pra req.protocol/req.get("host")
+  virem certos atras do proxy do Render (senao o QR podia apontar pra
+  "http://" em vez de "https://", ou pro host errado). Botao novo
+  "📱 Gerar QR Code" em acessorio.html, do lado do "Compartilhar" - ao
+  clicar, mostra/esconde uma caixa com a imagem do QR + instrucao de uso
+  (a imagem so carrega com internet, mesma logica do link publico).
+- SITE DO FABRICANTE: coluna opcional "site" em fabricantes
+  (ALTER TABLE ADD COLUMN IF NOT EXISTS, banco de producao ja tinha a
+  tabela). backend/server.js: mapFabricante devolve site; POST/PUT
+  /fabricantes aceitam e gravam. prototipo/adicionar.html: novo campo
+  "Site do fabricante (opcional)" na aba Fabricante, pre-preenchido ao
+  editar. prototipo/fabricante.html: se o fabricante tiver site, mostra
+  um botao "🔗 Visitar site do fabricante" que abre o link externo via
+  window.open(url, "_system") (mesmo padrao usado em atualizacao.js pra
+  abrir link fora do WebView do Capacitor).
+- Testado local (backend + servidor estatico apontando pro banco de
+  producao) com Playwright: editado o fabricante Blum de teste com um
+  site real (https://www.blum.com) pra confirmar que o botao aparece e
+  abre a URL certa (revertido depois - nao era pra ficar cadastrado,
+  so foi teste); QR Code renderiza e aponta pra
+  http://localhost:3000/manual/<id>/qrcode.png; abrir 2 acessorios e
+  voltar pro Inicio mostra os 2 em "Vistos recentemente", e a secao
+  some ao trocar pra aba Eletrodomesticos (sem vistos la). Zero erro de
+  console alem dos 404 esperados de imagem placeholder.
+- ESCOPO.md atualizado: novas funcionalidades 17 (QR Code), 18 (vistos
+  recentemente), 19 (site do fabricante), secao Backend com a rota
+  /manual/:id/qrcode.png e a coluna site, tabela de Telas atualizada
+  (Inicio, Fabricante, Detalhe do acessorio, Adicionar/Editar).
+
+[2026-07-16] LEGRABOX cadastrado na Blum + especificacoes tecnicas
+- Usuario passou informacoes reais de dois produtos Blum e pediu pra
+  cadastrar: LEGRABOX (sistema de gavetas metalicas, suporta 40 e 70kg,
+  12 a 18 anos de vida util) como item NOVO no catalogo da Blum, e
+  Aventos HK-XS (ja existia no catalogo original) ganhando a informacao
+  de que dura 8 anos e depois disso geralmente so precisa de regulagem
+  de forca. Pediu tambem pra tentar achar uma foto e o passo a passo do
+  LEGRABOX.
+- Especificacoes tecnicas (capacidade de carga, vida util) nao tinham
+  onde entrar no modelo de dados atual (nome/categoria/passos) - passo
+  nao e o lugar certo pra isso (nao e uma instrucao de instalacao).
+  Adicionado campo novo especificacoes (texto livre opcional) em
+  acessorios: backend/schema.sql (coluna + ALTER TABLE ADD COLUMN IF NOT
+  EXISTS), backend/server.js (mapAcessorio devolve, POST/PUT aceitam e
+  gravam), prototipo/adicionar.html (novo campo "Especificacoes
+  (opcional)" na aba Acessorio), prototipo/acessorio.html (mostra num
+  quadro destacado entre a categoria e o botao "Ver instalacao", CSS
+  .especificacoes-box novo).
+- FOTO: expliquei ao usuario que nao da pra usar a foto oficial da Blum
+  (mesma regra de direitos autorais ja documentada no ESCOPO.md pro
+  resto do catalogo, e que ja tinha sido explicada na rodada dos
+  eletrodomesticos). Pesquisado se havia alguma foto com licenca livre
+  (Wikimedia Commons) - nao encontrada. LEGRABOX cadastrado sem foto (usa
+  o icone generico de fallback); fica pra alguem anexar uma foto de
+  verdade depois via "Editar acessorio" (upload direto, sem precisar de
+  mim).
+- PASSO A PASSO: pesquisado via WebSearch/WebFetch nas paginas oficiais
+  da Blum (blum.com/pt/pt/products/boxsystems/legrabox/assembly/) e em
+  fontes gerais de instalacao de corredicas ocultas. Um PDF do
+  ManualsLib que aparecia como "instrucoes LEGRABOX" acabou sendo na
+  verdade um manual de instalacao de bancada de banheiro (mismatch da
+  ferramenta de busca) - descartado sem usar, pra nao colocar instrucao
+  errada no catalogo. Passo a passo final (7 passos) combina fatos
+  confirmados oficialmente (frente encaixa por pressao na posicao de
+  sustentacao; ajuste 3D de altura/lateral sob a tampa e inclinacao
+  atras do perfil; capacidade 40/70kg confirmada em multiplas fontes,
+  inclusive Hafele revendendo o produto) com pratica geral de instalacao
+  de corredica oculta (medir, fixar as calhas niveladas, testar
+  abrindo/fechando).
+- Cadastrado via script contra a API de producao (backend local, banco
+  Neon de producao): POST /acessorios pro LEGRABOX (fabricanteId blum,
+  categoria "Sistema de gavetas") e PUT /acessorios/blum-aventos-hk-xs
+  so com o campo especificacoes (passos originais preservados).
+- BUG proprio achado e corrigido no processo: o primeiro PUT do Aventos
+  foi mandado com o JSON inline no comando curl (aspas simples no Bash
+  do Windows) e os acentos corromperam ("elevação" virou "eleva??o") -
+  o shell do Windows nao preserva UTF-8 multi-byte em string inline
+  assim. Corrigido escrevendo o payload num arquivo (Write tool, UTF-8
+  correto) e mandando com "curl -d @arquivo" - mesma tecnica que ja
+  tinha sido usada sem problema pro LEGRABOX (que usou arquivo desde o
+  inicio). Reaplicado e confirmado certo lendo o JSON de volta.
+  LICAO: sempre escrever payload de curl com acento em arquivo, nunca
+  inline com aspas no Bash tool nessa maquina.
+- Testado visualmente com Playwright (screenshot) que os dois itens
+  renderizam certo: quadro de especificacoes aparece, texto sem
+  corrupcao, LEGRABOX mostra os 7 passos com o icone generico no lugar
+  da foto.
+- ESCOPO.md atualizado: nova funcionalidade 20 (especificacoes do
+  acessorio), secao Backend com a coluna, "Catalogo pre-cadastrado" lista
+  LEGRABOX e a atualizacao do Aventos HK-XS, tabela de Telas atualizada.
+
+[2026-07-16] Pasta eletrodomesticos-pesquisa/ removida
+- Usuario perguntou pra que servia a pasta e, entendendo que ela era so
+  um rascunho estatico sem nenhuma ligacao com o banco de dados (nao
+  sincroniza, nao atualiza sozinha), decidiu que nao precisa mais dela -
+  a partir de agora todo cadastro (ferragem ou eletrodomestico) vai ser
+  feito direto pelo app, pelo celular, usando a tela Adicionar/Editar.
+  Perguntado se queria uma ferramenta de "exportar o catalogo atual pra
+  um arquivo" sob demanda - respondeu que nao precisa.
+- Pasta eletrodomesticos-pesquisa/ (brastemp.json, electrolux.json,
+  fischer.json, continental.json, README.md, IMPORTADO.json) removida do
+  repositorio (git rm). O conteudo continua recuperavel pelo historico do
+  git se precisar um dia, mas nao faz mais parte do projeto ativo.
+- ESCOPO.md atualizado: removidas as referencias a essa pasta em
+  "Catalogo de eletrodomesticos" e "Proximos passos" - o texto agora so
+  explica que o cadastro e feito direto pelo app, com as mesmas duas
+  ressalvas de sempre (medida de nicho varia por modelo; gas exige
+  instalador credenciado).
+- Corrigido de brinde: prototipo/js/api.js tinha ficado apontando pro
+  servidor local (esquecido depois da ultima vez que o usuario pediu pra
+  "ver como ficou") - devolvido pra producao antes de mexer em mais nada.
+
+[2026-07-16] Passo a passo real do Aventos HK-XS (site oficial da Blum)
+- Usuario pediu pra buscar mais informacao no site oficial (www.blum.com)
+  sobre o Aventos HK-XS, alem da especificacao de vida util ja cadastrada.
+- Pesquisado via WebSearch/WebFetch a pagina oficial de montagem
+  (blum.com/br/pt/products/liftsystems/aventos-hk-xs/assembly/) - varios
+  PDFs de terceiros (Richelieu, Rockler) encontrados eram imagem/binario,
+  sem texto extraivel (mesma limitacao de sempre nessa maquina sem
+  poppler); a pagina HTML oficial da Blum, essa sim, trouxe texto
+  legivel e confiavel.
+- PUT /acessorios/blum-aventos-hk-xs trocou o passo unico generico
+  original ("Fixe a base de montagem...") por 7 passos reais: escolher o
+  modelo certo pelo peso da porta, fixar o mecanismo (furo padrao 32mm),
+  encaixar a porta pelo sistema CLIP (sem ferramenta), ajustar o
+  acumulador de forca com parafusadeira até a porta parar sozinha em
+  qualquer altura, regulagem 3D (altura/lateral/profundidade), conferir
+  fechamento suave se combinado com dobradica CLIP top BLUMOTION, e
+  testar abrindo/fechando varias vezes. especificacoes (vida util de 8
+  anos) nao foi mexida, continua como estava.
+  Usado @arquivo no curl (nao inline) pra nao repetir o bug de acentos
+  corrompidos do LEGRABOX.
+- Testado com Playwright (screenshot) que os 7 passos aparecem certos na
+  tela do acessorio, com a foto original do catalogo (essa ja existia).
+
+[2026-07-16] Toque na imagem pra ver ela inteira (sem corte)
+- Usuario reparou que algumas fotos nao ficam "totalmente enquadradas"
+  nas imagens do manual - causa: a capa do acessorio (acessorio.html) e
+  a foto de cada passo (passo.html) usam object-fit:cover num espaco de
+  tamanho fixo, que corta as bordas de fotos com proporcao diferente da
+  caixa (mesmo comportamento de sempre, so fica mais evidente em fotos
+  cuja proporcao foge muito do quadrado/4:3 esperado). Pediu uma forma
+  de tocar na foto e ver ela inteira.
+- Nova funcao global abrirImagemCheia() em prototipo/js/app.js: cria (na
+  primeira vez) uma div full-screen fixa (#lightbox-imagem, fundo preto
+  quase opaco, mesmo z-index 1000 do .crop-overlay que ja existia pro
+  recorte de upload) e mostra a imagem com object-fit:contain (cabe
+  inteira, sem cortar, com faixas pretas se a proporcao nao bater).
+  Fecha tocando em qualquer lugar da tela.
+- Escuta de clique delegada em ".cover img, .step-image img" (document,
+  1 listener so, funciona em qualquer pagina que carregue app.js) - so
+  abre quando o alvo do clique e a propria tag <img> (nao o container
+  inteiro), entao o botao de favorito flutuante dentro de ".cover" (que
+  e outro elemento) nao aciona o lightbox por engano.
+  Escopo: so a foto de capa (acessorio.html) e a foto do passo
+  (passo.html) - as miniaturas em lista (.thumb, nos cards) ficaram de
+  fora de proposito, porque tocar nelas ja navega pra tela de detalhe
+  (colocar lightbox ali ia competir com a navegacao).
+- Testado com Playwright: clique na foto de capa abre o lightbox, clique
+  de novo fecha; clique no botao de favorito (dentro de .cover) NAO abre
+  o lightbox (confirma que a delegacao de clique so pega a <img>). Pro
+  passo a passo, o teste via clique real travou porque as fotos de passo
+  do catalogo semente (blum-aventos-hk-xs-passo-1.png etc.) nunca
+  existiram como arquivo local (o <img> fica escondido pelo onerror,
+  Playwright trava esperando ficar visivel pra clicar) - contornado
+  simulando uma foto carregada com sucesso via JS e confirmando que o
+  listener abre o lightbox certo.
+- BUG (achado de novo, ja documentado antes): ao editar essa entrada do
+  HISTORICO.txt uma linha antes, apaguei sem querer o cabecalho da secao
+  "PENDENCIAS / PROXIMOS PASSOS" ao trocar o texto ao redor dele -
+  corrigido reinserindo o cabecalho antes de continuar. Serve de lembrete
+  pra sempre conferir que separadores de secao continuam no lugar depois
+  de um Edit que corta bem perto deles.
+- ESCOPO.md atualizado: nova funcionalidade 21 (ver imagem inteira),
+  tabela de Telas atualizada (Detalhe do acessorio, Passo a passo).
+
+[2026-07-16] Formato do manual por item: passo a passo, PDF ou video
+- Usuario pediu (estava no meio de outra tarefa, "cancela isso, quero
+  fazer um teste agora") pra reformular a edicao de imagens - queria
+  poder anexar um PDF ou um video como manual de instalacao, em vez de
+  (ou alem de) passo a passo com foto+texto, escolhendo isso na tela de
+  edicao.
+- Perguntado: (1) isso substitui o passo a passo pra todo mundo ou vira
+  escolha por item? Resposta: escolha por item. (2) PDF via upload
+  direto ou link pra arquivo ja hospedado em outro lugar? Resposta:
+  upload direto, mesmo esquema do video de passo (sem servico de storage
+  separado).
+- MODELO DE DADOS: acessorios ganhou 3 colunas novas - manual_tipo
+  ('passos' | 'pdf' | 'video', default 'passos', ALTER TABLE ADD COLUMN
+  IF NOT EXISTS), manual_pdf_base64 e manual_video_base64. Quando
+  manual_tipo != 'passos', a tabela passos fica vazia pra esse item (nao
+  e mais obrigatoria nesses casos - antes a validacao "pelo menos 1
+  passo" era so no cliente, o backend ja aceitava lista vazia).
+- BACKEND (server.js): MANUAL_TIPOS = ['passos','pdf','video'];
+  mapAcessorio devolve manualTipo/manualPdfBase64/manualVideoBase64;
+  POST e PUT /acessorios aceitam e validam manualTipo (cai pro valor
+  antigo/'passos' se vier invalido). Rota publica GET /manual/:id
+  reescrita pra ramificar: 'pdf' -> <iframe> com o PDF em base64 + link
+  "Baixar PDF"; 'video' -> <video controls>; 'passos' -> comportamento de
+  sempre (busca a tabela passos, so nesse caso).
+- ADICIONAR.HTML: novo campo "Formato do manual" (segmented de 3 botoes,
+  reaproveitando a mesma classe .segmented ja usada em Ferragem/
+  Eletrodomestico e Acessorio/Fabricante). Ao trocar o formato, esconde/
+  mostra a secao certa: "Passos de instalacao" (a de sempre, agora dentro
+  de #secao-passos), upload de PDF (max 20MB) ou upload de video (max
+  30MB - mais folga que o video de 1 passo isolado, que continua em
+  15MB). Validacao no salvar passou a ser condicional: passos so exige
+  "pelo menos 1 passo" se o formato for 'passos'; PDF/video exigem o
+  arquivo correspondente anexado. iniciarEdicaoAcessorio() agora tambem
+  preenche o formato e os arquivos existentes ao editar.
+- ACESSORIO.HTML: o botao principal ("Ver instalacao") e a secao "Passo a
+  passo" agora dependem do manualTipo do item. Pra PDF/video, o botao
+  vira "📄 Ver manual em PDF" ou "▶️ Ver video da instalacao" e, ao
+  tocar, revela uma area inline (mesmo padrao ja usado no QR Code) com o
+  PDF (iframe) ou o video. A secao "Passo a passo" some inteira nesses
+  casos. Compartilhar, QR Code, especificacoes, avaliacao (pra quem
+  edita) e favoritar continuam iguais, independente do formato.
+- PASSO.HTML: adicionada guarda contra acessorio com 0 passos (mostra
+  emptyState em vez de travar tentando ler passos[-1]) - defesa pra
+  quando alguem acessa passo.html direto por link antigo/errado num item
+  que agora e PDF ou video.
+- BUG achado durante o teste: a primeira versao usava <embed
+  type="application/pdf"> pra mostrar o PDF inline, e no Chromium (via
+  Playwright) isso deu "Couldn't load plugin" - o embed via plugin NPAPI
+  e legado e nao funciona em navegadores/WebView modernos. Trocado por
+  <iframe src="data:application/pdf;base64,...">, que e o jeito atual
+  (baseado no visualizador nativo de PDF do Chromium) - testado de novo
+  e funcionou sem erro. Troca feita nos dois lugares (server.js e
+  acessorio.html).
+- Testado local (backend + servidor estatico apontando pro banco de
+  producao) com Playwright: criado item de teste com PDF (real, valido,
+  1 pagina) - secao de passos some ao escolher PDF, preview "arquivo
+  anexado" aparece, botao principal vira "Ver manual em PDF", iframe
+  aparece tanto na tela do acessorio quanto na pagina publica; criado
+  item de teste com video - mesma logica, video aparece, sem secao
+  "Passo a passo"; passo.html acessado direto num item sem passo mostra
+  emptyState em vez de travar; item tradicional (Hettich Sensys)
+  continua funcionando exatamente como antes. Zero erro de console.
+  Itens de teste apagados do banco de producao depois.
+- Durante o teste, notado (de novo, mesmo padrao ja visto antes) que os
+  7 passos reais do Aventos HK-XS (cadastrados numa rodada anterior)
+  tinham sido sobrescritos por um unico passo de teste ("Teste ") -
+  provavelmente o proprio usuario testando a tela Adicionar/Editar no
+  celular. Restaurado o conteudo original via PUT (o texto dos 7 passos
+  ja estava registrado neste HISTORICO.txt, entrada de mais cedo).
+- ESCOPO.md atualizado: nova funcionalidade 22 (formato do manual),
+  secao Backend com as colunas manual_tipo/manual_pdf_base64/
+  manual_video_base64, tabela de Telas atualizada (Detalhe do acessorio,
+  Passo a passo, Adicionar/Editar, Manual publico).
+
+[2026-07-16] QR Code removido ("nao da a lugar nenhum")
+- Usuario pediu pra tirar o QR Code, avaliando que "nao da a lugar
+  nenhum" - a rota apontava pro proprio host do backend
+  (req.protocol/req.get("host")), entao rodando local o QR sempre
+  gerava um link pra localhost, inutil escaneado por outro aparelho; e
+  mesmo em producao a utilidade real (imprimir e colar no produto
+  fisico) aparentemente nao convenceu.
+- Removido por completo: botao "📱 Gerar QR Code" e a area de preview em
+  acessorio.html; rota GET /manual/:id/qrcode.png e o require("qrcode")
+  em server.js; dependencia "qrcode" do backend/package.json (via
+  "npm uninstall qrcode", que tambem atualizou o package-lock.json);
+  CSS .qrcode-box (nao usado em mais nenhum lugar).
+- app.set("trust proxy", 1) (que tinha sido adicionado por causa do QR
+  Code, pra req.protocol/req.get("host") funcionarem certo atras do
+  proxy do Render) FICOU no server.js - e uma configuracao correta e
+  inofensiva pra qualquer app Express atras de um proxy reverso, nao
+  precisa ser removida so porque o unico uso direto dela foi removido.
+- ESCOPO.md: item 17 (QR Code) removido; renumerados os itens seguintes
+  (18->17 Vistos recentemente, 19->18 Site do fabricante, 20->19
+  Especificacoes, 21->20 Ver imagem inteira, 22->21 Formato do manual) e
+  corrigidas todas as referencias cruzadas "item N" que apontavam pra
+  eles (secao Backend, tabela de Telas). Rota
+  GET /manual/:id/qrcode.png removida da lista de rotas.
+  compartilhar (item 16) continua existindo normalmente - so o QR Code
+  foi removido, nao a pagina publica /manual/:id em si.
+
 ===========================================================================
 PENDENCIAS / PROXIMOS PASSOS
 ===========================================================================
+- Comitar/enviar a rodada de 2026-07-16 (vistos recentemente,
+  site do fabricante, campo especificacoes, LEGRABOX, ver imagem
+  inteira, formato do manual PDF/video, remocao do QR Code) e
+  re-publicar o backend no Render (rotas/colunas novas ainda nao estao
+  no ar - o Render so tem o codigo ate a v1.2.0). Gerar um APK novo
+  (versao ainda nao foi subida
+  pra essa rodada) quando fizer sentido fechar.
+- Anexar uma foto real do LEGRABOX (via "Editar acessorio") - foi
+  cadastrado sem foto por causa de direitos autorais (ver ESCOPO.md >
+  Catalogo pre-cadastrado).
+- Cadastrar o site oficial de Blum/Hafele/Hettich (e dos 4 fabricantes de
+  eletrodomestico) pela tela Adicionar > Editar fabricante, agora que o
+  campo existe.
 - Cadastrar os primeiros aparelhos de eletrodomestico de verdade (com
   foto) dentro dos 4 fabricantes ja criados (Brastemp, Electrolux,
-  Fischer, Continental) - o rascunho de texto pesquisado continua em
-  eletrodomesticos-pesquisa/*.json como ponto de partida, mas revisar
-  antes de publicar (nunca testado na pratica, ver README.md da pasta
-  pras fontes usadas).
+  Fischer, Continental) - direto pelo app (tela Adicionar), ver
+  ressalvas de medida de nicho e ligacao de gas no ESCOPO.md.
 - Acompanhar o uso de armazenamento do Neon (free tier) depois que
   videos de passo comecarem a ser cadastrados de verdade - se ficar
   apertado, migrar pra um servico de storage de video dedicado.

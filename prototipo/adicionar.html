@@ -45,9 +45,35 @@
         <input type="text" id="input-categoria" placeholder="Ex: Dobradiça, Corrediça, Pé...">
       </div>
 
-      <div class="section-title">Passos de instalação</div>
-      <div id="lista-passos"></div>
-      <button class="btn-secondary" onclick="adicionarPasso()">+ Adicionar passo</button>
+      <div class="field">
+        <label>Especificações (opcional)</label>
+        <textarea id="input-especificacoes" placeholder="Ex: Suporta 40kg e 70kg. Vida útil de 12 a 18 anos em uso correto."></textarea>
+      </div>
+
+      <div class="field">
+        <label>Formato do manual</label>
+        <div class="segmented" id="segmented-manual-tipo">
+          <button type="button" id="manual-tipo-passos" class="active">Passo a passo</button>
+          <button type="button" id="manual-tipo-pdf">PDF</button>
+          <button type="button" id="manual-tipo-video">Vídeo</button>
+        </div>
+      </div>
+
+      <div id="secao-passos">
+        <div class="section-title">Passos de instalação</div>
+        <div id="lista-passos"></div>
+        <button class="btn-secondary" onclick="adicionarPasso()">+ Adicionar passo</button>
+      </div>
+
+      <div class="field" id="secao-manual-pdf" style="display:none;">
+        <label>Arquivo PDF do manual (máx. 20MB)</label>
+        <div id="preview-manual-pdf"></div>
+      </div>
+
+      <div class="field" id="secao-manual-video" style="display:none;">
+        <label>Vídeo do manual (máx. 30MB)</label>
+        <div id="preview-manual-video"></div>
+      </div>
 
       <div style="height:16px"></div>
       <button class="btn-primary" onclick="salvarAcessorio()" id="btn-salvar-acessorio">Salvar acessório</button>
@@ -82,6 +108,11 @@
         <input type="color" id="input-fabricante-cor" value="#2f6b4f">
       </div>
 
+      <div class="field">
+        <label>Site do fabricante (opcional)</label>
+        <input type="url" id="input-fabricante-site" placeholder="https://...">
+      </div>
+
       <div style="height:16px"></div>
       <button class="btn-primary" onclick="salvarFabricante()" id="btn-salvar-fabricante">Salvar fabricante</button>
       <button class="btn-secondary" type="button" onclick="cancelar()">Cancelar</button>
@@ -102,6 +133,10 @@ let capaOriginal = null;
 let logoFabricanteBase64 = null;
 let logoFabricanteOriginal = null;
 let tipoFabricanteAtual = "ferragem";
+let manualTipoAcessorio = "passos";
+let manualPdfBase64 = null;
+let manualPdfNome = null;
+let manualVideoBase64 = null;
 let passos = [];
 let formAlterado = false;
 
@@ -109,6 +144,89 @@ function definirTipoFabricante(tipo) {
   tipoFabricanteAtual = tipo === "eletrodomestico" ? "eletrodomestico" : "ferragem";
   document.getElementById("tipo-fabricante-ferragem").classList.toggle("active", tipoFabricanteAtual === "ferragem");
   document.getElementById("tipo-fabricante-eletro").classList.toggle("active", tipoFabricanteAtual === "eletrodomestico");
+}
+
+function definirManualTipo(tipo) {
+  manualTipoAcessorio = ["passos", "pdf", "video"].includes(tipo) ? tipo : "passos";
+  document.getElementById("manual-tipo-passos").classList.toggle("active", manualTipoAcessorio === "passos");
+  document.getElementById("manual-tipo-pdf").classList.toggle("active", manualTipoAcessorio === "pdf");
+  document.getElementById("manual-tipo-video").classList.toggle("active", manualTipoAcessorio === "video");
+  document.getElementById("secao-passos").style.display = manualTipoAcessorio === "passos" ? "block" : "none";
+  document.getElementById("secao-manual-pdf").style.display = manualTipoAcessorio === "pdf" ? "block" : "none";
+  document.getElementById("secao-manual-video").style.display = manualTipoAcessorio === "video" ? "block" : "none";
+}
+
+const PDF_TAMANHO_MAXIMO = 20 * 1024 * 1024; // 20MB
+const MANUAL_VIDEO_TAMANHO_MAXIMO = 30 * 1024 * 1024; // 30MB - manual inteiro, maior que o video de 1 passo (15MB)
+
+function onManualPdf(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > PDF_TAMANHO_MAXIMO) {
+    alert("PDF muito grande (máx. 20MB).");
+    input.value = "";
+    return;
+  }
+  const leitor = new FileReader();
+  leitor.onload = () => {
+    manualPdfBase64 = leitor.result;
+    manualPdfNome = file.name;
+    marcarAlterado();
+    renderPreviewManualPdf();
+  };
+  leitor.readAsDataURL(file);
+}
+
+function removerManualPdf() {
+  manualPdfBase64 = null;
+  manualPdfNome = null;
+  marcarAlterado();
+  renderPreviewManualPdf();
+}
+
+function renderPreviewManualPdf() {
+  const el = document.getElementById("preview-manual-pdf");
+  el.innerHTML = manualPdfBase64
+    ? `<div class="arquivo-anexado">📄 ${manualPdfNome || "PDF anexado"}</div>
+       <button type="button" class="btn-secondary" style="margin-top:8px" onclick="removerManualPdf()">Remover PDF</button>`
+    : `<label class="upload">
+         <span class="icon">📄</span><span>Toque para escolher o PDF</span>
+         <input type="file" accept="application/pdf" onchange="onManualPdf(this)">
+       </label>`;
+}
+
+function onManualVideo(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > MANUAL_VIDEO_TAMANHO_MAXIMO) {
+    alert("Vídeo muito grande (máx. 30MB). Grave um vídeo mais curto ou em qualidade menor.");
+    input.value = "";
+    return;
+  }
+  const leitor = new FileReader();
+  leitor.onload = () => {
+    manualVideoBase64 = leitor.result;
+    marcarAlterado();
+    renderPreviewManualVideo();
+  };
+  leitor.readAsDataURL(file);
+}
+
+function removerManualVideo() {
+  manualVideoBase64 = null;
+  marcarAlterado();
+  renderPreviewManualVideo();
+}
+
+function renderPreviewManualVideo() {
+  const el = document.getElementById("preview-manual-video");
+  el.innerHTML = manualVideoBase64
+    ? `<video src="${manualVideoBase64}" controls style="width:100%;border-radius:10px;max-height:200px;background:#000"></video>
+       <button type="button" class="btn-secondary" style="margin-top:8px" onclick="removerManualVideo()">Remover vídeo</button>`
+    : `<label class="upload">
+         <span class="icon">🎬</span><span>Toque para escolher o vídeo</span>
+         <input type="file" accept="video/*" onchange="onManualVideo(this)">
+       </label>`;
 }
 
 function renderSelectFabricante() {
@@ -184,6 +302,10 @@ async function iniciar() {
   document.getElementById("tab-acessorio").addEventListener("click", () => mostrarAba("acessorio"));
   document.getElementById("tab-fabricante").addEventListener("click", () => mostrarAba("fabricante"));
 
+  document.getElementById("manual-tipo-passos").addEventListener("click", () => definirManualTipo("passos"));
+  document.getElementById("manual-tipo-pdf").addEventListener("click", () => definirManualTipo("pdf"));
+  document.getElementById("manual-tipo-video").addEventListener("click", () => definirManualTipo("video"));
+
   document.addEventListener("change", (e) => {
     if (e.target.id === "input-capa") {
       const file = e.target.files[0];
@@ -206,6 +328,8 @@ async function iniciar() {
   });
 
   renderPassos();
+  renderPreviewManualPdf();
+  renderPreviewManualVideo();
 }
 
 iniciar();
@@ -225,6 +349,7 @@ function iniciarEdicaoAcessorio() {
   selectFabricante.value = original.fabricanteId;
   document.getElementById("input-nome").value = original.nome;
   document.getElementById("input-categoria").value = original.categoria;
+  document.getElementById("input-especificacoes").value = original.especificacoes || "";
 
   capaBase64 = original.imagemBase64 || null;
   capaOriginal = original.imagemBase64 ? null : (original.imagem || null);
@@ -236,6 +361,13 @@ function iniciarEdicaoAcessorio() {
     imagemOriginal: p.imagemBase64 ? null : (p.imagem || null),
     videoBase64: p.videoBase64 || null
   }));
+
+  definirManualTipo(original.manualTipo || "passos");
+  manualPdfBase64 = original.manualPdfBase64 || null;
+  manualPdfNome = manualPdfBase64 ? "PDF atual" : null;
+  manualVideoBase64 = original.manualVideoBase64 || null;
+  renderPreviewManualPdf();
+  renderPreviewManualVideo();
 }
 
 function iniciarEdicaoFabricante() {
@@ -253,6 +385,7 @@ function iniciarEdicaoFabricante() {
   definirTipoFabricante(original.tipo || "ferragem");
   document.getElementById("input-fabricante-nome").value = original.nome;
   document.getElementById("input-fabricante-cor").value = original.cor || "#2f6b4f";
+  document.getElementById("input-fabricante-site").value = original.site || "";
 
   logoFabricanteBase64 = original.logoBase64 || null;
   logoFabricanteOriginal = original.logoBase64 ? null : (original.logo || null);
@@ -369,12 +502,19 @@ async function salvarAcessorio() {
   const fabricanteId = selectFabricante.value;
   const nome = document.getElementById("input-nome").value.trim();
   const categoria = document.getElementById("input-categoria").value.trim();
+  const especificacoes = document.getElementById("input-especificacoes").value.trim();
 
   if (!fabricanteId) { alert("Cadastre um fabricante antes de adicionar um acessório."); return; }
   if (!nome) { alert("Informe o nome do acessório."); return; }
   if (!categoria) { alert("Informe a categoria do acessório."); return; }
-  if (passos.length === 0) { alert("Adicione pelo menos um passo."); return; }
-  if (passos.some(p => !p.texto.trim())) { alert("Preencha a descrição de todos os passos."); return; }
+  if (manualTipoAcessorio === "passos") {
+    if (passos.length === 0) { alert("Adicione pelo menos um passo."); return; }
+    if (passos.some(p => !p.texto.trim())) { alert("Preencha a descrição de todos os passos."); return; }
+  } else if (manualTipoAcessorio === "pdf") {
+    if (!manualPdfBase64) { alert("Anexe o PDF do manual."); return; }
+  } else if (manualTipoAcessorio === "video") {
+    if (!manualVideoBase64) { alert("Anexe o vídeo do manual."); return; }
+  }
 
   const passosFinal = passos.map(p => {
     const base = p.imagemBase64
@@ -390,7 +530,7 @@ async function salvarAcessorio() {
   btn.disabled = true;
   try {
     if (idEditarAcessorio) {
-      const patch = { fabricanteId, nome, categoria, passos: passosFinal };
+      const patch = { fabricanteId, nome, categoria, especificacoes, manualTipo: manualTipoAcessorio, manualPdfBase64, manualVideoBase64, passos: passosFinal };
       if (capaBase64) patch.imagemBase64 = capaBase64;
       await editarAcessorio(idEditarAcessorio, patch);
       formAlterado = false;
@@ -398,7 +538,7 @@ async function salvarAcessorio() {
       return;
     }
 
-    const acessorio = { fabricanteId, nome, categoria, imagemBase64: capaBase64, passos: passosFinal };
+    const acessorio = { fabricanteId, nome, categoria, especificacoes, manualTipo: manualTipoAcessorio, manualPdfBase64, manualVideoBase64, imagemBase64: capaBase64, passos: passosFinal };
     await criarAcessorio(acessorio);
     formAlterado = false;
     window.location.href = `fabricante.html?id=${fabricanteId}`;
@@ -413,6 +553,7 @@ async function salvarFabricante() {
   if (!podeAdicionar()) { window.location.href = "login.html"; return; }
   const nome = document.getElementById("input-fabricante-nome").value.trim();
   const cor = document.getElementById("input-fabricante-cor").value || "#2f6b4f";
+  const site = document.getElementById("input-fabricante-site").value.trim();
 
   if (!nome) { alert("Informe o nome do fabricante."); return; }
 
@@ -420,7 +561,7 @@ async function salvarFabricante() {
   btn.disabled = true;
   try {
     if (idEditarFabricante) {
-      const patch = { nome, cor, tipo: tipoFabricanteAtual };
+      const patch = { nome, cor, tipo: tipoFabricanteAtual, site };
       if (logoFabricanteBase64) patch.logoBase64 = logoFabricanteBase64;
       await editarFabricante(idEditarFabricante, patch);
       formAlterado = false;
@@ -428,7 +569,7 @@ async function salvarFabricante() {
       return;
     }
 
-    const criado = await criarFabricante({ nome, cor, logoBase64: logoFabricanteBase64, tipo: tipoFabricanteAtual });
+    const criado = await criarFabricante({ nome, cor, logoBase64: logoFabricanteBase64, tipo: tipoFabricanteAtual, site });
     formAlterado = false;
     window.location.href = `fabricante.html?id=${criado.id}`;
   } catch (e) {

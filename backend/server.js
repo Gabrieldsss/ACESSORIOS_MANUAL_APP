@@ -6,6 +6,7 @@ const { pool, garantirSchema } = require("./db");
 const { hashSenha, conferirSenha, gerarToken, exigirPermissaoAdicionar } = require("./auth");
 
 const app = express();
+app.set("trust proxy", 1); // pro req.protocol/req.get("host") virem certos atras do proxy do Render
 app.use(cors());
 app.use(express.json({ limit: "60mb" })); // fotos e videos em base64 podem ser grandes
 
@@ -28,6 +29,7 @@ function gerarId(nome) {
 }
 
 const TIPOS_FABRICANTE = ["ferragem", "eletrodomestico"];
+const MANUAL_TIPOS = ["passos", "pdf", "video"];
 
 function mapFabricante(row) {
   return {
@@ -37,7 +39,8 @@ function mapFabricante(row) {
     logo: row.logo || undefined,
     logoBase64: row.logo_base64 || undefined,
     origem: row.origem,
-    tipo: row.tipo
+    tipo: row.tipo,
+    site: row.site || undefined
   };
 }
 
@@ -50,6 +53,10 @@ function mapAcessorio(row, passos) {
     imagem: row.imagem || undefined,
     imagemBase64: row.imagem_base64 || undefined,
     origem: row.origem,
+    especificacoes: row.especificacoes || undefined,
+    manualTipo: row.manual_tipo || "passos",
+    manualPdfBase64: row.manual_pdf_base64 || undefined,
+    manualVideoBase64: row.manual_video_base64 || undefined,
     avaliacoesUtil: row.avaliacoes_util || 0,
     avaliacoesNaoUtil: row.avaliacoes_nao_util || 0,
     passos: passos.map((p) => ({
@@ -108,15 +115,15 @@ app.get("/catalogo", async (req, res) => {
 // Fabricantes (exige permissão)
 // ---------------------------------------------------------------------
 app.post("/fabricantes", exigirPermissaoAdicionar, async (req, res) => {
-  const { nome, cor, logoBase64, tipo } = req.body || {};
+  const { nome, cor, logoBase64, tipo, site } = req.body || {};
   if (!nome) return res.status(400).json({ erro: "Nome é obrigatório." });
 
   const tipoFinal = TIPOS_FABRICANTE.includes(tipo) ? tipo : "ferragem";
   const id = gerarId(nome);
   const { rows } = await pool.query(
-    `INSERT INTO fabricantes (id, nome, cor, logo_base64, origem, tipo, criado_por)
-     VALUES ($1, $2, $3, $4, 'usuario', $5, $6) RETURNING *`,
-    [id, nome, cor || "#2f6b4f", logoBase64 || null, tipoFinal, req.usuario.id]
+    `INSERT INTO fabricantes (id, nome, cor, logo_base64, origem, tipo, site, criado_por)
+     VALUES ($1, $2, $3, $4, 'usuario', $5, $6, $7) RETURNING *`,
+    [id, nome, cor || "#2f6b4f", logoBase64 || null, tipoFinal, site || null, req.usuario.id]
   );
   res.status(201).json(mapFabricante(rows[0]));
 });
@@ -126,11 +133,11 @@ app.put("/fabricantes/:id", exigirPermissaoAdicionar, async (req, res) => {
   if (!atual.rows[0]) return res.status(404).json({ erro: "Fabricante não encontrado." });
 
   const antigo = atual.rows[0];
-  const { nome, cor, logoBase64, tipo } = req.body || {};
+  const { nome, cor, logoBase64, tipo, site } = req.body || {};
   const tipoFinal = TIPOS_FABRICANTE.includes(tipo) ? tipo : antigo.tipo;
   const { rows } = await pool.query(
-    `UPDATE fabricantes SET nome = $1, cor = $2, logo_base64 = $3, tipo = $4 WHERE id = $5 RETURNING *`,
-    [nome ?? antigo.nome, cor ?? antigo.cor, logoBase64 ?? antigo.logo_base64, tipoFinal, req.params.id]
+    `UPDATE fabricantes SET nome = $1, cor = $2, logo_base64 = $3, tipo = $4, site = $5 WHERE id = $6 RETURNING *`,
+    [nome ?? antigo.nome, cor ?? antigo.cor, logoBase64 ?? antigo.logo_base64, tipoFinal, site ?? antigo.site, req.params.id]
   );
   res.json(mapFabricante(rows[0]));
 });
@@ -145,19 +152,20 @@ app.delete("/fabricantes/:id", exigirPermissaoAdicionar, async (req, res) => {
 // Acessórios (exige permissão)
 // ---------------------------------------------------------------------
 app.post("/acessorios", exigirPermissaoAdicionar, async (req, res) => {
-  const { fabricanteId, nome, categoria, imagemBase64, passos } = req.body || {};
+  const { fabricanteId, nome, categoria, imagemBase64, especificacoes, manualTipo, manualPdfBase64, manualVideoBase64, passos } = req.body || {};
   if (!fabricanteId || !nome || !categoria) {
     return res.status(400).json({ erro: "Fabricante, nome e categoria são obrigatórios." });
   }
 
+  const manualTipoFinal = MANUAL_TIPOS.includes(manualTipo) ? manualTipo : "passos";
   const id = gerarId(nome);
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
     const { rows } = await client.query(
-      `INSERT INTO acessorios (id, fabricante_id, nome, categoria, imagem_base64, origem, criado_por)
-       VALUES ($1, $2, $3, $4, $5, 'usuario', $6) RETURNING *`,
-      [id, fabricanteId, nome, categoria, imagemBase64 || null, req.usuario.id]
+      `INSERT INTO acessorios (id, fabricante_id, nome, categoria, imagem_base64, origem, especificacoes, manual_tipo, manual_pdf_base64, manual_video_base64, criado_por)
+       VALUES ($1, $2, $3, $4, $5, 'usuario', $6, $7, $8, $9, $10) RETURNING *`,
+      [id, fabricanteId, nome, categoria, imagemBase64 || null, especificacoes || null, manualTipoFinal, manualPdfBase64 || null, manualVideoBase64 || null, req.usuario.id]
     );
     await inserirPassos(client, id, passos || []);
     await client.query("COMMIT");
@@ -175,13 +183,23 @@ app.put("/acessorios/:id", exigirPermissaoAdicionar, async (req, res) => {
   if (!atual.rows[0]) return res.status(404).json({ erro: "Acessório não encontrado." });
 
   const antigo = atual.rows[0];
-  const { nome, categoria, imagemBase64, passos } = req.body || {};
+  const { nome, categoria, imagemBase64, especificacoes, manualTipo, manualPdfBase64, manualVideoBase64, passos } = req.body || {};
+  const manualTipoFinal = MANUAL_TIPOS.includes(manualTipo) ? manualTipo : antigo.manual_tipo;
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
     const { rows } = await client.query(
-      `UPDATE acessorios SET nome = $1, categoria = $2, imagem_base64 = $3 WHERE id = $4 RETURNING *`,
-      [nome ?? antigo.nome, categoria ?? antigo.categoria, imagemBase64 ?? antigo.imagem_base64, req.params.id]
+      `UPDATE acessorios SET nome = $1, categoria = $2, imagem_base64 = $3, especificacoes = $4, manual_tipo = $5, manual_pdf_base64 = $6, manual_video_base64 = $7 WHERE id = $8 RETURNING *`,
+      [
+        nome ?? antigo.nome,
+        categoria ?? antigo.categoria,
+        imagemBase64 ?? antigo.imagem_base64,
+        especificacoes ?? antigo.especificacoes,
+        manualTipoFinal,
+        manualPdfBase64 ?? antigo.manual_pdf_base64,
+        manualVideoBase64 ?? antigo.manual_video_base64,
+        req.params.id
+      ]
     );
     if (passos) {
       await client.query("DELETE FROM passos WHERE acessorio_id = $1", [req.params.id]);
@@ -260,18 +278,28 @@ app.get("/manual/:id", async (req, res) => {
     return res.status(404).send("<!doctype html><meta charset=\"utf-8\"><p>Manual não encontrado.</p>");
   }
 
-  const passos = await pool.query("SELECT * FROM passos WHERE acessorio_id = $1 ORDER BY ordem", [req.params.id]);
-
-  const passosHtml = passos.rows.map((p, i) => `
-    <div class="passo">
-      <div class="passo-num">${i + 1}</div>
-      <div class="passo-corpo">
-        ${imagemHtml(p.imagem, p.imagem_base64, `Passo ${i + 1}`)}
-        ${p.video_base64 ? `<video src="${p.video_base64}" controls preload="none"></video>` : ""}
-        <p>${escapeHtml(p.texto)}</p>
+  let conteudoHtml;
+  if (acessorio.manual_tipo === "pdf" && acessorio.manual_pdf_base64) {
+    conteudoHtml = `
+      <div class="manual-pdf">
+        <iframe src="${escapeHtml(acessorio.manual_pdf_base64)}"></iframe>
+        <a class="botao" href="${escapeHtml(acessorio.manual_pdf_base64)}" download="${escapeHtml(acessorio.nome)}.pdf">⬇️ Baixar PDF</a>
+      </div>`;
+  } else if (acessorio.manual_tipo === "video" && acessorio.manual_video_base64) {
+    conteudoHtml = `<video class="manual-video" src="${escapeHtml(acessorio.manual_video_base64)}" controls></video>`;
+  } else {
+    const passos = await pool.query("SELECT * FROM passos WHERE acessorio_id = $1 ORDER BY ordem", [req.params.id]);
+    conteudoHtml = passos.rows.map((p, i) => `
+      <div class="passo">
+        <div class="passo-num">${i + 1}</div>
+        <div class="passo-corpo">
+          ${imagemHtml(p.imagem, p.imagem_base64, `Passo ${i + 1}`)}
+          ${p.video_base64 ? `<video src="${p.video_base64}" controls preload="none"></video>` : ""}
+          <p>${escapeHtml(p.texto)}</p>
+        </div>
       </div>
-    </div>
-  `).join("");
+    `).join("");
+  }
 
   res.send(`<!doctype html>
 <html lang="pt-BR">
@@ -294,6 +322,9 @@ app.get("/manual/:id", async (req, res) => {
   .passo-corpo { flex: 1; min-width: 0; }
   .passo-corpo img, .passo-corpo video { width: 100%; border-radius: 10px; margin-bottom: 8px; max-height: 240px; object-fit: cover; background: #000; }
   .passo-corpo p { margin: 0; line-height: 1.5; }
+  .manual-pdf iframe { width: 100%; height: 70vh; border-radius: 10px; border: 1px solid #e5e7eb; background: #fff; }
+  .manual-pdf .botao { display: block; text-align: center; margin-top: 14px; padding: 12px; border-radius: 10px; background: var(--cor); color: #fff; text-decoration: none; font-weight: 600; }
+  .manual-video { width: 100%; border-radius: 10px; background: #000; }
   footer { text-align: center; padding: 24px; font-size: 12px; color: #8a93a6; }
 </style>
 </head>
@@ -304,8 +335,8 @@ app.get("/manual/:id", async (req, res) => {
     <div class="categoria">${escapeHtml(acessorio.categoria)}</div>
   </div>
   <main>
-    <div class="capa">${imagemHtml(acessorio.imagem, acessorio.imagem_base64, acessorio.nome)}</div>
-    ${passosHtml}
+    ${acessorio.manual_tipo === "passos" ? `<div class="capa">${imagemHtml(acessorio.imagem, acessorio.imagem_base64, acessorio.nome)}</div>` : ""}
+    ${conteudoHtml}
   </main>
   <footer>Manual do Montador — Madeirol</footer>
 </body>

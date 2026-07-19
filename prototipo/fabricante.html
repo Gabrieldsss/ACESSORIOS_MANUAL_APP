@@ -17,6 +17,8 @@
   <div class="content">
     <input class="search" id="busca" type="text" placeholder="Buscar acessório por nome ou categoria...">
 
+    <div id="area-site-fabricante"></div>
+
     <div class="section-title">Acessórios</div>
     <div class="card-list" id="lista-acessorios"></div>
     <div class="empty" id="vazio-acessorios" style="display:none;"></div>
@@ -55,6 +57,15 @@ function iniciar() {
   document.getElementById("titulo-topo").textContent = fabricante.nome;
   const fabBtn = document.getElementById("fab-adicionar");
   if (fabBtn) fabBtn.href = `adicionar.html?fabricante=${fabricante.id}`;
+
+  if (fabricante.site) {
+    document.getElementById("area-site-fabricante").innerHTML = `
+      <button type="button" class="btn-secondary" id="btn-site-fabricante">🔗 Visitar site do fabricante</button>
+    `;
+    document.getElementById("btn-site-fabricante").addEventListener("click", () => {
+      window.open(fabricante.site, "_system");
+    });
+  }
 
   function card(acessorio) {
     const origemUsuario = acessorio.origem === "usuario";

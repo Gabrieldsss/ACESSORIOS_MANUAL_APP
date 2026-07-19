@@ -121,14 +121,66 @@ instalar cada peça.
     (rota pública nova no backend, ver "Backend"). Usa o compartilhamento
     nativo do aparelho quando disponível; senão abre o WhatsApp com o
     link pronto.
+17. **Vistos recentemente** (desde 2026-07-16, tela Início) — logo abaixo
+    da busca, uma fileira horizontal com os últimos acessórios abertos
+    (até 8, mais recente primeiro). Só local (`localStorage`, mesmo
+    esquema de favoritos — nunca sincroniza com o backend); a fileira
+    respeita a aba ativa do alternador (item 1/13): um item visto na aba
+    Ferragens não aparece se você estiver na aba Eletrodomésticos, e a
+    seção some inteira se não houver nenhum visto pra aba atual.
+18. **Site do fabricante** (desde 2026-07-16) — campo opcional (`site`) no
+    cadastro/edição de fabricante (aba "Fabricante" da tela Adicionar).
+    Quando preenchido, a tela do fabricante ganha um botão "🔗 Visitar
+    site do fabricante" que abre o link no navegador do aparelho.
+19. **Especificações do acessório** (desde 2026-07-16) — campo de texto
+    livre opcional na tela Adicionar/Editar acessório, pra dado técnico
+    que não é passo de instalação (capacidade de carga, vida útil
+    esperada etc). Quando preenchido, aparece num quadro destacado na
+    tela de detalhe do acessório, entre a categoria e o botão "Ver
+    instalação".
+20. **Ver imagem inteira** (desde 2026-07-16) — a foto de capa (tela de
+    detalhe do acessório) e a foto de cada passo (tela "Passo a passo")
+    usam recorte automático (`object-fit: cover`) pra caber no espaço do
+    layout, o que corta as bordas de fotos com proporção diferente.
+    Tocar na foto abre ela inteira, sem corte, em tela cheia (fundo
+    escuro, `object-fit: contain`); toca em qualquer lugar pra fechar.
+21. **Formato do manual: passo a passo, PDF ou vídeo** (desde 2026-07-16)
+    — na tela Adicionar/Editar acessório, um seletor "Formato do manual"
+    escolhe, por item, como o conteúdo de instalação é apresentado:
+    - **Passo a passo** (padrão, como sempre foi): sequência de
+      foto+texto (+ vídeo opcional por passo), na tela "Passo a passo".
+    - **PDF**: upload direto de um arquivo PDF (máx. 20MB). Na tela do
+      acessório, o botão principal vira "📄 Ver manual em PDF" e mostra
+      o PDF dentro do próprio app (`<iframe>`), com um botão "Baixar
+      PDF" como alternativa.
+    - **Vídeo**: upload direto de um vídeo único cobrindo a instalação
+      inteira (máx. 30MB — mais folga que o vídeo de um passo isolado,
+      que continua limitado a 15MB). Botão principal vira "▶️ Ver vídeo
+      da instalação".
+    Em PDF/vídeo a tela do acessório não mostra a seção "Passo a passo"
+    (fica vazia pra esse item) nem o link pra `passo.html`. A página
+    pública (`/manual/:id`, item 16) também se adapta ao formato
+    escolhido. Especificações (item 19), avaliação (item 15),
+    compartilhar e favoritar continuam funcionando igual, independente
+    do formato.
 
 ## Catálogo pré-cadastrado (exemplos incluídos no protótipo)
-- **Blum**: Articulador Aventos HK-XS, Corrediça Tandem
+- **Blum**: Articulador Aventos HK-XS, Corrediça Tandem, LEGRABOX
 - **Häfele**: Pé para rodapé 80, Trilho telescópico
 - **Hettich**: Dobradiça Sensys (com amortecimento), Sistema Quadro
 
 Os textos de instalação desses itens são **genéricos/placeholder** — ajuste
-para o passo a passo real de cada peça depois.
+para o passo a passo real de cada peça depois. Exceções, com conteúdo real
+pesquisado em fontes oficiais da Blum (ver HISTORICO.txt, 2026-07-16):
+- **LEGRABOX**: passo a passo de instalação + especificações (capacidade
+  de carga 40/70kg, vida útil de 12 a 18 anos). Cadastrado sem foto —
+  não é possível reusar a foto oficial da Blum (direitos autorais, ver
+  "Imagens e logos" abaixo); alguém precisa tirar/anexar uma foto real
+  via "Editar acessório".
+- **Articulador Aventos HK-XS**: ganhou o campo "Especificações"
+  preenchido (vida útil de 8 anos, depois disso geralmente só precisa de
+  regulagem de força) — o passo a passo de instalação continua sendo o
+  texto genérico original.
 
 ## Catálogo de eletrodomésticos (fabricantes cadastrados em 2026-07-14)
 Cadastrados os 4 fabricantes mais conhecidos — **Brastemp**, **Electrolux**,
@@ -141,12 +193,14 @@ Uma rodada anterior chegou a popular 10 aparelhos (forno, cooktop,
 coifa etc.) com passo a passo de texto pesquisado em manuais/páginas
 oficiais, mas foi desfeita a pedido do usuário antes de publicar (sem
 foto/diagrama de instalação, o texto sozinho não foi considerado pronto
-pra divulgar aos montadores). Esse conteúdo continua disponível em
-`eletrodomesticos-pesquisa/*.json` (pasta fora de `prototipo/`, não
-embarcada no APK) como ponto de partida pra quando alguém for cadastrar
-os aparelhos de verdade — inclui as fontes e as ressalvas sobre medida de
-nicho variar por modelo e sobre ligação de gás exigir instalador
-credenciado (NBR 13103).
+pra divulgar aos montadores). A partir de 2026-07-16, o cadastro de
+aparelhos de eletrodoméstico passou a ser feito **direto pelo app**
+(tela Adicionar, pelo celular) — duas ressalvas importantes valem pra
+qualquer item cadastrado assim: medida de nicho/recorte varia por
+modelo mesmo dentro da mesma marca (conferir o gabarito/manual do
+modelo específico antes de cortar), e fogão/forno/cooktop **a gás**
+exige instalador credenciado (NBR 13103) — o papel do montador é
+preparar/fixar o nicho, não fazer a ligação de gás.
 
 ## Imagens e logos
 Não é possível baixar e reutilizar os arquivos oficiais de logo/fotos de
@@ -177,6 +231,10 @@ verdade — ver a pasta `backend/` na raiz do projeto.
   15), `GET /manual/:id` (público, página HTML do manual — item 16) e
   `GET /assets/*` (estático, serve `prototipo/assets/` pra essa página
   funcionar fora do app).
+  Fabricante ganhou também uma coluna opcional `site` (item 18). Acessório
+  ganhou uma coluna opcional `especificacoes` (texto livre curto pra dado
+  técnico que não é passo de instalação — capacidade de carga, vida útil
+  etc; ver "Catálogo pré-cadastrado" pro primeiro uso real, no LEGRABOX).
 - **Vídeo dos passos** (item 14): coluna `video_base64` em `passos`, mesmo
   esquema de upload direto das fotos — **sem serviço de storage de vídeo
   separado**, o arquivo vira base64 e vai pro Postgres como os demais.
@@ -188,6 +246,13 @@ verdade — ver a pasta `backend/` na raiz do projeto.
   passos passarem a ter vídeo — se isso virar um problema, a solução
   correta é migrar pra um serviço de storage de vídeo de verdade
   (ex: Cloudinary, Bunny Stream), o que está fora do escopo atual.
+- **Formato do manual** (item 21): colunas `manual_tipo` (`'passos'` |
+  `'pdf'` | `'video'`, default `'passos'`), `manual_pdf_base64` e
+  `manual_video_base64` em `acessorios` — mesmo esquema de upload direto
+  sem storage separado, com limite de 20MB (PDF) e 30MB (vídeo do manual
+  inteiro) no cliente. Quando `manual_tipo` não é `'passos'`, a tabela
+  `passos` fica vazia pra esse acessório (deixou de ser obrigatória).
+  Vale a mesma ressalva de espaço no Neon do vídeo por passo acima.
 - **Offline continua funcionando pra consulta**: toda vez que uma tela abre,
   o app tenta buscar `GET /catalogo` e guarda o resultado em
   `localStorage.catalogoCache` (`prototipo/js/data.js` →
@@ -222,12 +287,12 @@ verdade — ver a pasta `backend/` na raiz do projeto.
 ## Telas
 | Tela | Descrição |
 |---|---|
-| Início | Alternador Ferragens/Eletrodomésticos + catálogo de acessórios (busca por nome + chips de fabricante pra filtrar, "Todos" por padrão) — fabricante é secundário aqui, ver itens 1 e 13 |
-| Fabricante | Lista única de acessórios do fabricante (catálogo + meus, cada item com selo "Catálogo"/"Meu"), busca, botão "+ adicionar" (só visível com permissão); botões de editar/remover o fabricante |
-| Detalhe do acessório | Foto, fabricante, categoria, resumo dos passos, botão "Ver instalação", botão "📤 Compartilhar" (item 16); contagem de avaliações (item 15) visível pra quem tem permissão |
-| Passo a passo | Imagem grande + vídeo opcional (item 14) + texto do passo, navegação, progresso; no último passo, avaliação "essa instrução te ajudou?" (item 15) |
-| Adicionar / Editar | Alterna entre aba "Acessório" (fabricante — agrupado por Ferragens/Eletrodomésticos no seletor — dados + passos dinâmicos com foto, vídeo opcional e texto) e aba "Fabricante" (tipo, nome, cor, logo). Mesma tela é reaproveitada, pré-preenchida, quando vem de "Editar". Exige login **com permissão** (`podeAdicionar`); a aba "Adicionar" da barra inferior e o botão "+" só aparecem pra quem tem essa permissão. |
-| Manual público (`/manual/:id`) | Página HTML simples servida pelo backend (fora do app) — foto/vídeo/texto de cada passo, sem login, sem edição; é o que abre quando alguém recebe o link do "Compartilhar" (item 16) |
+| Início | Alternador Ferragens/Eletrodomésticos + fileira "Vistos recentemente" (item 17, só quando há histórico) + catálogo de acessórios (busca por nome + chips de fabricante pra filtrar, "Todos" por padrão) — fabricante é secundário aqui, ver itens 1 e 13 |
+| Fabricante | Lista única de acessórios do fabricante (catálogo + meus, cada item com selo "Catálogo"/"Meu"), busca, botão "+ adicionar" (só visível com permissão), botão "🔗 Visitar site do fabricante" (item 18, só se cadastrado); botões de editar/remover o fabricante |
+| Detalhe do acessório | Foto (toque pra ver inteira, item 20), fabricante, categoria, resumo dos passos (ou "Manual em PDF/vídeo", item 21), especificações (opcional, item 19), botão principal que muda conforme o formato do manual (item 21), botão "📤 Compartilhar" (item 16); contagem de avaliações (item 15) visível pra quem tem permissão |
+| Passo a passo | Só existe pra acessório com formato "passo a passo" (item 21) — imagem grande (toque pra ver inteira, item 20) + vídeo opcional (item 14) + texto do passo, navegação, progresso; no último passo, avaliação "essa instrução te ajudou?" (item 15) |
+| Adicionar / Editar | Alterna entre aba "Acessório" (fabricante — agrupado por Ferragens/Eletrodomésticos no seletor — dados, especificações opcionais, formato do manual: passo a passo/PDF/vídeo (item 21), com os campos correspondentes) e aba "Fabricante" (tipo, nome, cor, logo, site opcional). Mesma tela é reaproveitada, pré-preenchida, quando vem de "Editar". Exige login **com permissão** (`podeAdicionar`); a aba "Adicionar" da barra inferior e o botão "+" só aparecem pra quem tem essa permissão. |
+| Manual público (`/manual/:id`) | Página HTML simples servida pelo backend (fora do app), sem login, sem edição — conteúdo muda conforme o formato do acessório (item 21): passo a passo (foto/vídeo/texto de cada passo), PDF embutido, ou vídeo; é o que abre quando alguém recebe o link do "Compartilhar" (item 16) |
 | Conta (login) | Login com usuário/senha, ou dados da conta logada + botão "Sair" |
 | Favoritos | Lista de todos os acessórios marcados como favoritos, de qualquer fabricante |
 | Ajuda | "Como encontrar um manual" — 3 dicas (busca, fabricante, favoritos) |
@@ -296,10 +361,9 @@ registrados pra quando for preciso recriar/trocar de serviço:
 
 ## Próximos passos
 - Cadastrar os primeiros aparelhos de verdade (com foto) dentro dos 4
-  fabricantes de eletrodoméstico já criados — o rascunho pesquisado em
-  `eletrodomesticos-pesquisa/*.json` serve de ponto de partida pros
-  textos, mas revise antes de publicar (nunca testado na prática, ver
-  ressalvas em "Catálogo de eletrodomésticos" acima).
+  fabricantes de eletrodoméstico já criados — direto pelo app (tela
+  Adicionar), conferindo as ressalvas em "Catálogo de eletrodomésticos"
+  acima antes de publicar pros montadores.
 - Acompanhar o uso de armazenamento do Neon depois que vídeos de passo
   começarem a ser cadastrados de verdade (ver "Backend" > vídeo dos
   passos) — se ficar apertado, migrar pra um serviço de storage de vídeo
